@@ -232,20 +232,22 @@ export function computeSummarizeTable(table: Table, params: SummarizeParams): { 
   return { columns: outputColumns, rows: outputRows, groupCount: outputRows.length };
 }
 
-interface PortableGroupByColumn {
+// Exportés : réutilisés tels quels par `reportSpec.ts` pour le champ `summarize` d'un bloc
+// `chart` — un ReportSpec est portable par nom exactement comme une Recipe, pas de format parallèle.
+export interface PortableGroupByColumn {
   name: string;
   normalization: KeyNormalization;
   binning?: BinningMode;
 }
 
-interface PortableAggregateSpec {
+export interface PortableAggregateSpec {
   fn: AggFn;
   name?: string;
   asName: string;
   separator?: string;
 }
 
-interface PortableSummarizeParams {
+export interface PortableSummarizeParams {
   groupBy: PortableGroupByColumn[];
   aggregates: PortableAggregateSpec[];
 }

@@ -15,14 +15,16 @@ export interface FilterRowsParams {
   newTableName?: string;
 }
 
-function collectConditionColumnIds(group: ConditionGroup, out: ColumnId[]): void {
+// Exportées : réutilisées par `reportSpec.ts` pour le champ `filter` d'un bloc `table`, qui a
+// besoin du même remappage nom <-> ColumnId qu'un `filter_rows` — pas de format parallèle.
+export function collectConditionColumnIds(group: ConditionGroup, out: ColumnId[]): void {
   for (const c of group.conditions) {
     if (c.kind === 'group') collectConditionColumnIds(c, out);
     else out.push(c.columnId);
   }
 }
 
-function mapConditionColumns(group: ConditionGroup, map: (id: ColumnId) => ColumnId): ConditionGroup {
+export function mapConditionColumns(group: ConditionGroup, map: (id: ColumnId) => ColumnId): ConditionGroup {
   return {
     ...group,
     conditions: group.conditions.map((c) => (c.kind === 'group' ? mapConditionColumns(c, map) : { ...c, columnId: map(c.columnId) })),

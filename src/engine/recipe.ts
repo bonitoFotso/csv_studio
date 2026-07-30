@@ -64,7 +64,8 @@ export function mappingIsComplete(mapping: ColumnMapping): boolean {
   return Object.values(mapping).every((v) => v !== null);
 }
 
-function buildNameToId(table: Table, mapping: ColumnMapping): Record<string, string> {
+/** Exportée : réutilisée par `reportSpecCompute.ts` pour résoudre `expectedColumns` -> `ColumnId` — même mécanisme qu'une Recipe. */
+export function buildNameToId(table: Table, mapping: ColumnMapping): Record<string, string> {
   const nameToId: Record<string, string> = {};
   for (const [expected, actual] of Object.entries(mapping)) {
     if (actual === null) continue;
