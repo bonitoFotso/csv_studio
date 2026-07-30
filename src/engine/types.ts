@@ -41,7 +41,8 @@ export type OperationType =
   | 'filter_rows'
   | 'deduplicate'
   | 'enrich_join'
-  | 'append_rows';
+  | 'append_rows'
+  | 'summarize';
 
 export interface Operation<P = unknown> {
   id: string;

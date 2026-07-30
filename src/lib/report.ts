@@ -16,6 +16,7 @@ const TYPE_LABEL: Record<string, string> = {
   deduplicate: 'Dédoublonner',
   enrich_join: 'Rapprocher / enrichir',
   append_rows: 'Ajouter des lignes depuis un fichier',
+  summarize: 'Résumer (regrouper / agréger)',
 };
 
 export function operationLabel(type: string): string {
