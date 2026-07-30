@@ -54,6 +54,23 @@ Un test qui échoue ne se contourne jamais en le désactivant ou en assouplissan
   `undefined` comme égales dans `toEqual` — utile pour les round-trips `toPortable`/`rebind` où un
   champ optionnel n'est pas toujours présent.
 
+## ReportSpec — format de rapport (moteur en place, pas encore d'UI)
+
+`src/engine/reportSpec.ts` (types), `reportSpecValidate.ts` (validation stricte, erreurs avec
+chemin JSON précis), `reportSpecCompute.ts` (calcul des blocs contre une table + un remappage).
+C'est une **sœur de `Recipe`**, pas un système parallèle : même mécanisme de remappage par nom
+(`suggestColumnMapping`/`mappingIsComplete`/`buildNameToId`, exportées de `recipe.ts` et
+réutilisées telles quelles, jamais dupliquées). Le vocabulaire JSON du `ReportSpec` utilise
+volontairement `column` (au lieu du `name` interne à `Recipe`) et `normalization: "raw"` (au lieu
+du `"none"` interne) — il colle à l'exemple donné dans `prompt-2-csv-studio-rapports-mcp.md`,
+puisque ce fichier sera souvent généré par un assistant qui aura vu cet exemple précis. La
+traduction vers les types moteur (`SummarizeParams`, `ColumnId`) se fait dans
+`reportSpecCompute.ts`, jamais en dupliquant la logique d'agrégation elle-même.
+
+Un bloc `chart` ne recalcule jamais rien : son champ `summarize` est résolu (noms -> `ColumnId`)
+puis passé directement à `computeSummarizeTable` — l'unique implémentation de l'agrégation dans
+tout le projet, partagée avec l'opération `summarize` du pipeline et le futur export PDF.
+
 ## Structure
 
 ```
@@ -69,4 +86,8 @@ src/persistence/db.ts    schéma Dexie
 
 Une session autonome a démarré le 2026-07-30 pour implémenter `prompt-2-csv-studio-rapports-mcp.md`.
 Voir `NIGHT_LOG.md` pour l'état détaillé phase par phase et les décisions prises sans pouvoir
-demander confirmation. Chaque phase vit sur sa propre branche `night/<n>-<nom>`, non fusionnée.
+demander confirmation. Chaque phase vit sur sa propre branche `night/<n>-<nom>`, non fusionnée —
+**mais quand une phase dépend du code d'une phase précédente** (ex. phase 2 a besoin de
+`summarize.ts` de la phase 1), sa branche part de la branche de cette phase précédente, pas de
+`main` (qui ne reçoit jamais aucun merge de travail de nuit). Relire les branches dans l'ordre des
+phases pour cette raison.

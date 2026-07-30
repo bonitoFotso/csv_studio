@@ -22,7 +22,8 @@ bun run build     # build de production
 - **Persistance & recettes** : l'espace de travail (tables, pipelines, fichiers de droite) est sauvegardé dans IndexedDB (Dexie) à chaque changement et restauré au chargement. Une recette (pipeline sans données) peut être enregistrée (Dexie + export `.json`) et rechargée sur un autre fichier via un écran de remappage — colonnes principales et, le cas échéant, colonnes du second fichier d'un rapprochement ou d'un ajout de lignes, chacune pré-remplie par similarité de nom mais jamais devinée silencieusement.
 - **Web Worker** (`src/worker/`) : le rejeu du pipeline, le calcul des groupes de doublons et le rapprochement (exact et flou) tournent hors du thread principal, jamais l'UI ne gèle. Barre de progression (réelle pour le rapprochement flou — le calcul le plus coûteux — indéterminée ailleurs), affichée seulement au-delà de 150 ms. Annulation de l'aperçu flou en cours dès que la config change. Détail de la conception dans `WEB_WORKER.md`.
 - **Résumer (agrégation / tableau croisé)** (bouton « Résumer ») : opération `summarize` qui produit une table dérivée à une granularité différente — regroupement sur une ou plusieurs colonnes (chacune avec sa propre normalisation brute/texte/date), agrégats (`count`, `countDistinct`, `countNonEmpty`, `sum`, `avg`, `min`, `max`, `median`, `first`, `concat`), et binning numérique en tranches (largeur fixe, nombre de tranches, ou bornes explicites) — les tranches vides restent visibles avec un compte de zéro et gardent leur ordre naturel. Parsing de nombre tolérant à la virgule décimale française et aux espaces de milliers (normal, insécable, fine insécable) ; une cellule vide est exclue d'une moyenne, jamais comptée comme zéro. Comme toute autre étape, c'est rejouable/désactivable/annulable et calculé dans le Worker.
-- **Pas encore fait** : export XLSX (CSV uniquement pour l'instant, par choix explicite).
+- **Format `ReportSpec` (moteur seulement, pas encore d'UI)** : `src/engine/reportSpec.ts` définit un format de rapport JSON portable, sœur de `Recipe` — mêmes principes (colonnes référencées par nom, `expectedColumns`, remappage obligatoire pré-rempli par similarité). Cinq types de blocs : `text`, `kpi_row`, `chart` (barres verticales/horizontales, barres empilées, lignes, secteurs/anneau, histogramme — le champ `summarize` d'un bloc `chart` est passé tel quel à l'opération `summarize`, aucun recalcul séparé), `table` (avec filtre et troncature `maxRows`), `page_break`. `validateReportSpec` collecte toutes les erreurs d'un document malformé en un seul passage, avec un chemin JSON précis par erreur (ex. `blocks[2].summarize.groupBy[0].column`) plutôt qu'un échec silencieux. L'éditeur de rapport et l'export PDF arrivent dans une prochaine étape.
+- **Pas encore fait** : export XLSX (CSV uniquement pour l'instant, par choix explicite), éditeur de rapport et export PDF (moteur prêt, UI à venir).
 
 ## Modèle du moteur
 
@@ -64,6 +65,48 @@ bun run build     # build de production
 ```
 
 Au chargement sur un nouveau fichier, chaque nom dans `expectedColumns` (et, pour une étape `enrich_join` ou `append_rows`, chaque nom dans `steps[i].secondary.expectedColumns` une fois le second fichier réimporté) est proposé au remappage — pré-rempli par similarité, jamais deviné silencieusement — avant que le pipeline ne soit reconstruit et exécutable.
+
+## Format d'un ReportSpec (JSON)
+
+```json
+{
+  "formatVersion": 1,
+  "kind": "report",
+  "title": "Rapport de session — Formation mototaxi",
+  "subtitle": "Session de juillet 2026",
+  "expectedColumns": ["nom", "prenom", "nb_presences", "note", "decision"],
+  "blocks": [
+    { "type": "text", "content": "Contexte de la session…" },
+    {
+      "type": "kpi_row",
+      "items": [
+        { "label": "Candidats", "agg": { "fn": "count" } },
+        { "label": "Moyenne", "agg": { "fn": "avg", "column": "note" } }
+      ]
+    },
+    {
+      "type": "chart",
+      "chartType": "bar",
+      "title": "Répartition des décisions",
+      "summarize": {
+        "groupBy": [{ "column": "decision", "normalization": "text" }],
+        "aggregates": [{ "fn": "count", "asName": "effectif" }]
+      },
+      "x": "decision",
+      "series": [{ "column": "effectif", "label": "Candidats" }]
+    },
+    {
+      "type": "table",
+      "title": "Candidats non appariés",
+      "columns": ["nom", "prenom"],
+      "maxRows": 200
+    },
+    { "type": "page_break" }
+  ]
+}
+```
+
+`normalization` accepte `"raw"` (comparaison brute — équivalent JSON du `"none"` interne du moteur), `"text"`, ou `"date"`, exactement comme le rapprochement. Le champ `summarize` d'un bloc `chart` est passé tel quel à l'opération `summarize` du moteur (`src/engine/operations/summarize.ts`) une fois ses noms de colonnes résolus — un graphique ne recalcule jamais rien lui-même. `validateReportSpec` (`src/engine/reportSpecValidate.ts`) rejette un document malformé avec une liste d'erreurs précises (chemin JSON + message actionnable) plutôt qu'un échec silencieux ; `computeReport` (`src/engine/reportSpecCompute.ts`) calcule les données de chaque bloc contre une table et un remappage confirmés, sans jamais modifier la table.
 
 ## Stack
 
