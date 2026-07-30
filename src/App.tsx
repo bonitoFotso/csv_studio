@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Copy, Download, Filter, FolderOpen, Link2, ListPlus, Save } from 'lucide-react';
+import { Copy, Download, Filter, FolderOpen, Link2, ListPlus, Save, Sigma } from 'lucide-react';
 import { addStep, createOperation } from '@/engine/pipeline.ts';
 import type { ReorderColumnsParams } from '@/engine/operations/reorderColumns.ts';
 import { mergeVisibleReorder } from '@/lib/columnOrder.ts';
@@ -18,6 +18,7 @@ import { EnrichJoinDialog } from '@/components/join/EnrichJoinDialog.tsx';
 import { SaveRecipeDialog } from '@/components/recipes/SaveRecipeDialog.tsx';
 import { LoadRecipeDialog } from '@/components/recipes/LoadRecipeDialog.tsx';
 import { AppendRowsDialog } from '@/components/append/AppendRowsDialog.tsx';
+import { SummarizeDialog } from '@/components/summarize/SummarizeDialog.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { BusyIndicator } from '@/components/ui/busy-indicator.tsx';
 import { useDelayedFlag } from '@/hooks/useDelayedFlag.ts';
@@ -31,6 +32,7 @@ function Workspace() {
   const [duplicatesOpen, setDuplicatesOpen] = React.useState(false);
   const [joinOpen, setJoinOpen] = React.useState(false);
   const [appendOpen, setAppendOpen] = React.useState(false);
+  const [summarizeOpen, setSummarizeOpen] = React.useState(false);
   const [saveRecipeOpen, setSaveRecipeOpen] = React.useState(false);
   const [loadRecipeOpen, setLoadRecipeOpen] = React.useState(false);
   const [selectedColumnIds, setSelectedColumnIds] = React.useState<Set<string>>(new Set());
@@ -77,6 +79,10 @@ function Workspace() {
                 <Button size="sm" variant="outline" onClick={() => setAppendOpen(true)}>
                   <ListPlus size={14} />
                   Ajouter des lignes
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setSummarizeOpen(true)}>
+                  <Sigma size={14} />
+                  Résumer
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setExportOpen(true)}>
                   <Download size={14} />
@@ -177,6 +183,13 @@ function Workspace() {
               pipeline={active.entry.pipeline}
               open={appendOpen}
               onOpenChange={setAppendOpen}
+            />
+            <SummarizeDialog
+              entryId={active.entry.id}
+              table={active.displayTable}
+              pipeline={active.entry.pipeline}
+              open={summarizeOpen}
+              onOpenChange={setSummarizeOpen}
             />
             <SaveRecipeDialog entry={active.entry} open={saveRecipeOpen} onOpenChange={setSaveRecipeOpen} />
             <LoadRecipeDialog entry={active.entry} open={loadRecipeOpen} onOpenChange={setLoadRecipeOpen} />
