@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  --color-bg: #f4f6f8;
+  --color-surface: #ffffff;
+  --color-surface-alt: #eceff2;
+  --color-border: #d8dee4;
+  --color-text: #2b303a;
+  --color-text-muted: #5b6472;
+  --color-text-faint: #8a93a1;
+
+  --color-destructive: #c4321e;
+  --color-destructive-bg: #fbe9e6;
+  --color-validated: #0f7a5c;
+  --color-validated-bg: #e3f5ee;
+
+  --color-empty-cell: #b7bfc9;
+}
+
+:root[data-theme="dark"] {
+  --color-bg: #14171b;
+  --color-surface: #1b1f24;
+  --color-surface-alt: #22262c;
+  --color-border: #30353d;
+  --color-text: #dfe3e8;
+  --color-text-muted: #98a1ad;
+  --color-text-faint: #6b7280;
+
+  --color-destructive: #ef5a45;
+  --color-destructive-bg: #3a1b17;
+  --color-validated: #3ecf9a;
+  --color-validated-bg: #12332a;
+
+  --color-empty-cell: #4b5563;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: #14171b;
+    --color-surface: #1b1f24;
+    --color-surface-alt: #22262c;
+    --color-border: #30353d;
+    --color-text: #dfe3e8;
+    --color-text-muted: #98a1ad;
+    --color-text-faint: #6b7280;
+
+    --color-destructive: #ef5a45;
+    --color-destructive-bg: #3a1b17;
+    --color-validated: #3ecf9a;
+    --color-validated-bg: #12332a;
+
+    --color-empty-cell: #4b5563;
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Toutes les valeurs de cellules en chasse fixe : les identifiants/numéros doivent s'aligner. */
+.cell-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.cell-empty {
+  color: var(--color-empty-cell);
+  font-style: italic;
+}
