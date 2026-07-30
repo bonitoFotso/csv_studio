@@ -40,7 +40,8 @@ export type OperationType =
   | 'normalize_columns'
   | 'filter_rows'
   | 'deduplicate'
-  | 'enrich_join';
+  | 'enrich_join'
+  | 'append_rows';
 
 export interface Operation<P = unknown> {
   id: string;

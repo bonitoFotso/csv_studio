@@ -224,6 +224,35 @@ describe('enrich_join (exact)', () => {
     expect(rebuilt).toEqual({ ...params, rightTableId: right.id });
   });
 
+  it('toPortable/rebind : la normalisation des clés (exacte et blocage flou) voyage avec la recette', () => {
+    const left = createTableFromRows('candidats', ['nom', 'naissance'], [{ nom: 'Fotso', naissance: '19/07/1998' }]);
+    const right = createTableFromRows('presence', ['nom_complet', 'date_naissance', 'nb'], [{ nom_complet: 'FOTSO', date_naissance: '19-07-1998', nb: '3' }]);
+    const def = getOperationDefinition('enrich_join');
+    const params: EnrichJoinParams = {
+      rightTableId: right.id,
+      matchStrategy: 'exact',
+      keyPairs: [
+        { leftColumnId: getColumnId(left, 'nom'), rightColumnId: getColumnId(right, 'nom_complet'), normalization: 'text' },
+        { leftColumnId: getColumnId(left, 'naissance'), rightColumnId: getColumnId(right, 'date_naissance'), normalization: 'date' },
+      ],
+      copyColumns: [{ rightColumnId: getColumnId(right, 'nb'), asName: 'nb' }],
+      collision: 'suffix',
+      joinType: 'left',
+      multiMatch: 'first',
+    };
+    const portable = def.toPortable(params, left, makeContext(right));
+    const nameToId = { nom: getColumnId(left, 'nom'), naissance: getColumnId(left, 'naissance') };
+    const secondaryNameToId = { nom_complet: getColumnId(right, 'nom_complet'), date_naissance: getColumnId(right, 'date_naissance'), nb: getColumnId(right, 'nb') };
+    const rebuilt = def.rebind(portable.params, nameToId, { secondaryTable: right, secondaryNameToId }) as EnrichJoinParams;
+    expect(rebuilt.keyPairs[0].normalization).toBe('text');
+    expect(rebuilt.keyPairs[1].normalization).toBe('date');
+
+    // Et le résultat matche bien malgré les différences de format grâce à la normalisation restaurée.
+    const { table: out } = def.apply(left, rebuilt, makeContext(right));
+    const col = out.columns.find((c) => c.name === 'nb')!;
+    expect(out.rows[0].cells[col.id]).toBe('3');
+  });
+
   it('rebind échoue explicitement sans table secondaire fournie', () => {
     const left = leftTable();
     const right = rightTableSingle();

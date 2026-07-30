@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Copy, Download, Filter, FolderOpen, Link2, Save } from 'lucide-react';
+import { Copy, Download, Filter, FolderOpen, Link2, ListPlus, Save } from 'lucide-react';
 import { addStep, createOperation } from '@/engine/pipeline.ts';
 import type { ReorderColumnsParams } from '@/engine/operations/reorderColumns.ts';
 import { mergeVisibleReorder } from '@/lib/columnOrder.ts';
@@ -17,21 +17,29 @@ import { DuplicatesDialog } from '@/components/duplicates/DuplicatesDialog.tsx';
 import { EnrichJoinDialog } from '@/components/join/EnrichJoinDialog.tsx';
 import { SaveRecipeDialog } from '@/components/recipes/SaveRecipeDialog.tsx';
 import { LoadRecipeDialog } from '@/components/recipes/LoadRecipeDialog.tsx';
+import { AppendRowsDialog } from '@/components/append/AppendRowsDialog.tsx';
 import { Button } from '@/components/ui/button.tsx';
+import { BusyIndicator } from '@/components/ui/busy-indicator.tsx';
+import { useDelayedFlag } from '@/hooks/useDelayedFlag.ts';
 
 function Workspace() {
-  const { tables, setPipeline } = useWorkspace();
+  const { tables, activeId, setPipeline } = useWorkspace();
   const active = useActiveTable();
   const [importOpen, setImportOpen] = React.useState(tables.length === 0);
   const [exportOpen, setExportOpen] = React.useState(false);
   const [filterOpen, setFilterOpen] = React.useState(false);
   const [duplicatesOpen, setDuplicatesOpen] = React.useState(false);
   const [joinOpen, setJoinOpen] = React.useState(false);
+  const [appendOpen, setAppendOpen] = React.useState(false);
   const [saveRecipeOpen, setSaveRecipeOpen] = React.useState(false);
   const [loadRecipeOpen, setLoadRecipeOpen] = React.useState(false);
   const [selectedColumnIds, setSelectedColumnIds] = React.useState<Set<string>>(new Set());
 
-  const showImport = importOpen || !active;
+  // `activeId` (synchrone) décide de l'écran affiché ; `active` (résultat du rejeu, calculé
+  // dans le Worker) peut être transitoirement null même quand un onglet est ouvert — on ne
+  // veut pas retomber sur l'écran d'import dans ce cas, juste montrer un état de calcul.
+  const showImport = importOpen || !activeId;
+  const showBusy = useDelayedFlag(active?.recalculating ?? false, 150);
 
   React.useEffect(() => {
     setSelectedColumnIds(new Set());
@@ -45,9 +53,12 @@ function Workspace() {
         <div className="flex-1">
           <ImportZone onImported={() => setImportOpen(false)} />
         </div>
+      ) : !active ? (
+        <div className="flex flex-1 items-center justify-center text-[13px] text-text-muted">Calcul en cours…</div>
       ) : (
         active && (
           <>
+            {showBusy && <BusyIndicator progress={active.progress} />}
             <div className="flex items-center justify-between border-b border-border px-3 py-1.5">
               <span className="cell-value text-[12.5px] text-text-muted">{active.entry.displayName}</span>
               <div className="flex gap-2">
@@ -62,6 +73,10 @@ function Workspace() {
                 <Button size="sm" variant="outline" onClick={() => setJoinOpen(true)}>
                   <Link2 size={14} />
                   Rapprocher
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setAppendOpen(true)}>
+                  <ListPlus size={14} />
+                  Ajouter des lignes
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setExportOpen(true)}>
                   <Download size={14} />
@@ -155,6 +170,13 @@ function Workspace() {
               pipeline={active.entry.pipeline}
               open={joinOpen}
               onOpenChange={setJoinOpen}
+            />
+            <AppendRowsDialog
+              entryId={active.entry.id}
+              table={active.displayTable}
+              pipeline={active.entry.pipeline}
+              open={appendOpen}
+              onOpenChange={setAppendOpen}
             />
             <SaveRecipeDialog entry={active.entry} open={saveRecipeOpen} onOpenChange={setSaveRecipeOpen} />
             <LoadRecipeDialog entry={active.entry} open={loadRecipeOpen} onOpenChange={setLoadRecipeOpen} />

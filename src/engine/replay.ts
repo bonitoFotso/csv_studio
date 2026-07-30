@@ -10,6 +10,8 @@ export interface ReplayResult {
 export interface ReplayOptions {
   /** Tables auxiliaires disponibles (fichier de droite d'un enrich_join), indexées par id. */
   auxiliaryTables?: Table[];
+  /** Appelé après chaque étape effectivement exécutée (progression grossière, par étape — pas par ligne). */
+  onStepProgress?: (done: number, total: number) => void;
 }
 
 export function createApplyContext(options: ReplayOptions): ApplyContext {
@@ -65,11 +67,15 @@ export function replay(sourceTable: Table, steps: PipelineStep[], cursor: number
 
   for (let i = 0; i < limit; i++) {
     const step = steps[i];
-    if (!step.operation.enabled) continue;
+    if (!step.operation.enabled) {
+      options.onStepProgress?.(i + 1, limit);
+      continue;
+    }
     const def = getOperationDefinition(step.operation.type);
     const { table: nextTable, report } = def.apply(table, step.operation.params, ctx);
     table = nextTable;
     reportsByIndex.set(i, report);
+    options.onStepProgress?.(i + 1, limit);
   }
 
   return { table, reportsByIndex };

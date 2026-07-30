@@ -2,17 +2,22 @@ import * as React from 'react';
 import { Plus, Trash2, UploadCloud } from 'lucide-react';
 import { parseCsvFile, parseCsvText } from '@/lib/csv.ts';
 import { createTableFromRows, cloneTableWithRows } from '@/engine/table.ts';
-import { matchRowsExact, type AggregateFn, type KeyPair } from '@/engine/join.ts';
-import { resolveFuzzyMatches, type FuzzyManualDecision, type FuzzyMatchConfig } from '@/engine/fuzzyJoin.ts';
+import type { AggregateFn, KeyPair } from '@/engine/join.ts';
+import type { KeyNormalization } from '@/engine/keyNormalize.ts';
+import { unmatchedRightRows, computeKeyNormalizedText } from '@/engine/fuzzyJoin.ts';
+import type { FuzzyForcedPair, FuzzyManualDecision, FuzzyMatchConfig } from '@/engine/fuzzyJoin.ts';
 import { addStep, createOperation } from '@/engine/pipeline.ts';
 import type { CopyColumn, AggregateRule, EnrichJoinParams } from '@/engine/operations/enrichJoin.ts';
-import type { ColumnId, Pipeline, Table as EngineTable } from '@/engine/types.ts';
+import type { ColumnId, Pipeline, Row, Table as EngineTable } from '@/engine/types.ts';
 import { useWorkspace } from '@/state/workspace.tsx';
+import { useWorkerCall } from '@/hooks/useWorkerCall.ts';
+import { workerClient } from '@/worker/client.ts';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
 import { FuzzyValidationScreen } from '@/components/join/FuzzyValidationScreen.tsx';
+import { UnmatchedRightScreen } from '@/components/join/UnmatchedRightScreen.tsx';
 
 type Collision = 'prefix' | 'suffix' | 'overwrite' | 'skip';
 type MultiMatch = 'first' | 'aggregate' | 'flag_conflict';
@@ -24,6 +29,29 @@ function ColumnSelect({ value, onChange, columns }: { value: string; onChange: (
       {columns.map((c) => (
         <option key={c.id} value={c.id}>
           {c.name}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+const NORMALIZATION_LABEL: Record<KeyNormalization, string> = {
+  none: 'brute',
+  text: 'texte',
+  date: 'date',
+};
+
+function NormalizationSelect({ value, onChange }: { value: KeyNormalization; onChange: (mode: KeyNormalization) => void }) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value as KeyNormalization)}
+      className="h-7 rounded-md border border-border bg-surface px-1.5 text-[12px]"
+      title="Normalisation appliquée aux deux valeurs avant de les comparer"
+    >
+      {(Object.keys(NORMALIZATION_LABEL) as KeyNormalization[]).map((mode) => (
+        <option key={mode} value={mode}>
+          {NORMALIZATION_LABEL[mode]}
         </option>
       ))}
     </select>
@@ -63,7 +91,9 @@ export function EnrichJoinDialog({
   const [thresholdHigh, setThresholdHigh] = React.useState(90);
   const [thresholdLow, setThresholdLow] = React.useState(65);
   const [manualDecisions, setManualDecisions] = React.useState<FuzzyManualDecision[]>([]);
+  const [forcedPairs, setForcedPairs] = React.useState<FuzzyForcedPair[]>([]);
   const [validating, setValidating] = React.useState(false);
+  const [showingUnmatchedRight, setShowingUnmatchedRight] = React.useState(false);
   const [initialPendingCount, setInitialPendingCount] = React.useState(0);
 
   // Partagé
@@ -85,7 +115,9 @@ export function EnrichJoinDialog({
     setThresholdHigh(90);
     setThresholdLow(65);
     setManualDecisions([]);
+    setForcedPairs([]);
     setValidating(false);
+    setShowingUnmatchedRight(false);
     setCopySelection(new Map());
     setCollision('suffix');
     setCollisionText('_droite');
@@ -98,8 +130,8 @@ export function EnrichJoinDialog({
 
   const loadRightTable = (t: EngineTable) => {
     setRightTable(t);
-    setKeyPairs([{ leftColumnId: table.columns[0]?.id ?? '', rightColumnId: t.columns[0]?.id ?? '' }]);
-    setBlockingPairs([{ leftColumnId: table.columns[0]?.id ?? '', rightColumnId: t.columns[0]?.id ?? '' }]);
+    setKeyPairs([{ leftColumnId: table.columns[0]?.id ?? '', rightColumnId: t.columns[0]?.id ?? '', normalization: 'text' }]);
+    setBlockingPairs([{ leftColumnId: table.columns[0]?.id ?? '', rightColumnId: t.columns[0]?.id ?? '', normalization: 'text' }]);
   };
 
   const importFile = async (file: File) => {
@@ -108,10 +140,14 @@ export function EnrichJoinDialog({
   };
 
   // --- Aperçu exact ---
-  const exactMatches = React.useMemo(() => {
-    if (strategy !== 'exact' || !rightTable || keyPairs.some((p) => !p.leftColumnId || !p.rightColumnId)) return [];
-    return matchRowsExact(table.rows, rightTable.rows, keyPairs);
-  }, [strategy, table.rows, rightTable, keyPairs]);
+  const { data: exactMatchesResult, loading: exactLoading } = useWorkerCall(
+    () =>
+      strategy !== 'exact' || !rightTable || keyPairs.some((p) => !p.leftColumnId || !p.rightColumnId)
+        ? null
+        : workerClient.matchRowsExact(table.rows, rightTable.rows, keyPairs),
+    [strategy, table.rows, rightTable, keyPairs],
+  );
+  const exactMatches = exactMatchesResult ?? [];
 
   const exactUnmatched = exactMatches.filter((m) => m.matches.length === 0).length;
   const exactAmbiguous = exactMatches.filter((m) => m.matches.length > 1).length;
@@ -130,13 +166,21 @@ export function EnrichJoinDialog({
       thresholdHigh,
       thresholdLow,
       manualDecisions,
+      forcedPairs,
     };
-  }, [fuzzyLeftIds, fuzzyRightIds, blockingPairs, tokenized, thresholdHigh, thresholdLow, manualDecisions]);
+  }, [fuzzyLeftIds, fuzzyRightIds, blockingPairs, tokenized, thresholdHigh, thresholdLow, manualDecisions, forcedPairs]);
 
-  const fuzzyResolution = React.useMemo(() => {
-    if (strategy !== 'fuzzy' || !rightTable || !fuzzyConfig) return null;
-    return resolveFuzzyMatches(table.rows, rightTable.rows, fuzzyConfig);
-  }, [strategy, table.rows, rightTable, fuzzyConfig]);
+  const {
+    data: fuzzyResolution,
+    loading: fuzzyLoading,
+    progress: fuzzyProgress,
+  } = useWorkerCall(
+    (onProgress) =>
+      strategy !== 'fuzzy' || !rightTable || !fuzzyConfig ? null : workerClient.resolveFuzzyMatches(table.rows, rightTable.rows, fuzzyConfig, onProgress),
+    [strategy, table.rows, rightTable, fuzzyConfig],
+  );
+
+  const unmatchedRight = fuzzyResolution && rightTable ? unmatchedRightRows(rightTable.rows, fuzzyResolution) : [];
 
   const copyColumns: CopyColumn[] = [...copySelection.entries()].map(([rightColumnId, asName]) => ({ rightColumnId, asName }));
 
@@ -191,6 +235,12 @@ export function EnrichJoinDialog({
     importTable(cloneTableWithRows(table, `${table.name} (${label})`, rows));
   };
 
+  const exportUnmatchedRight = () => {
+    if (!rightTable || !fuzzyResolution) return;
+    const rows = unmatchedRightRows(rightTable.rows, fuzzyResolution);
+    importTable(cloneTableWithRows(rightTable, `${rightTable.name} (non appariées)`, rows));
+  };
+
   const openValidation = () => {
     if (!fuzzyResolution) return;
     setInitialPendingCount(fuzzyResolution.pending.length);
@@ -199,6 +249,17 @@ export function EnrichJoinDialog({
 
   const recordDecision = (pair: { leftKeyNormalized: string; rightKeyNormalized: string }, decision: 'validated' | 'rejected') => {
     setManualDecisions((prev) => [...prev, { leftKeyNormalized: pair.leftKeyNormalized, rightKeyNormalized: pair.rightKeyNormalized, decision }]);
+  };
+
+  const addForcedPair = (leftRow: Row, rightRow: Row) => {
+    if (!fuzzyConfig) return;
+    setForcedPairs((prev) => [
+      ...prev,
+      {
+        leftKeyNormalized: computeKeyNormalizedText(leftRow, fuzzyConfig.leftKeyColumnIds, fuzzyConfig.tokenized),
+        rightKeyNormalized: computeKeyNormalizedText(rightRow, fuzzyConfig.rightKeyColumnIds, fuzzyConfig.tokenized),
+      },
+    ]);
   };
 
   return (
@@ -252,6 +313,16 @@ export function EnrichJoinDialog({
               ou coller depuis le presse-papiers
             </button>
           </div>
+        ) : showingUnmatchedRight && fuzzyResolution && rightTable && fuzzyConfig ? (
+          <UnmatchedRightScreen
+            rows={unmatchedRight}
+            rightColumns={rightTable.columns}
+            leftRows={table.rows}
+            leftColumns={table.columns}
+            onForcePair={addForcedPair}
+            onExport={exportUnmatchedRight}
+            onBack={() => setShowingUnmatchedRight(false)}
+          />
         ) : validating && fuzzyResolution ? (
           <FuzzyValidationScreen
             pairs={fuzzyResolution.pending}
@@ -301,6 +372,10 @@ export function EnrichJoinDialog({
                         onChange={(id) => setKeyPairs((prev) => prev.map((p, idx) => (idx === i ? { ...p, rightColumnId: id } : p)))}
                         columns={rightTable.columns}
                       />
+                      <NormalizationSelect
+                        value={pair.normalization ?? 'none'}
+                        onChange={(mode) => setKeyPairs((prev) => prev.map((p, idx) => (idx === i ? { ...p, normalization: mode } : p)))}
+                      />
                       {keyPairs.length > 1 && (
                         <Button variant="ghost" size="icon" onClick={() => setKeyPairs((prev) => prev.filter((_, idx) => idx !== i))}>
                           <Trash2 size={13} />
@@ -311,10 +386,19 @@ export function EnrichJoinDialog({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setKeyPairs((prev) => [...prev, { leftColumnId: table.columns[0]?.id ?? '', rightColumnId: rightTable.columns[0]?.id ?? '' }])}
+                    onClick={() =>
+                      setKeyPairs((prev) => [
+                        ...prev,
+                        { leftColumnId: table.columns[0]?.id ?? '', rightColumnId: rightTable.columns[0]?.id ?? '', normalization: 'text' },
+                      ])
+                    }
                   >
                     <Plus size={12} /> Paire de clés
                   </Button>
+                  <p className="text-[11px] text-text-faint">
+                    « texte » ignore casse/accents/ponctuation/espaces ; « date » reconnaît un même jour écrit avec des séparateurs différents (19/07/2026 =
+                    19-07-2026).
+                  </p>
                 </div>
               </div>
             ) : (
@@ -385,6 +469,10 @@ export function EnrichJoinDialog({
                           onChange={(id) => setBlockingPairs((prev) => prev.map((p, idx) => (idx === i ? { ...p, rightColumnId: id } : p)))}
                           columns={rightTable.columns}
                         />
+                        <NormalizationSelect
+                          value={pair.normalization ?? 'none'}
+                          onChange={(mode) => setBlockingPairs((prev) => prev.map((p, idx) => (idx === i ? { ...p, normalization: mode } : p)))}
+                        />
                         {blockingPairs.length > 1 && (
                           <Button variant="ghost" size="icon" onClick={() => setBlockingPairs((prev) => prev.filter((_, idx) => idx !== i))}>
                             <Trash2 size={13} />
@@ -396,7 +484,10 @@ export function EnrichJoinDialog({
                       variant="ghost"
                       size="sm"
                       onClick={() =>
-                        setBlockingPairs((prev) => [...prev, { leftColumnId: table.columns[0]?.id ?? '', rightColumnId: rightTable.columns[0]?.id ?? '' }])
+                        setBlockingPairs((prev) => [
+                          ...prev,
+                          { leftColumnId: table.columns[0]?.id ?? '', rightColumnId: rightTable.columns[0]?.id ?? '', normalization: 'text' },
+                        ])
                       }
                     >
                       <Plus size={12} /> Critère de blocage
@@ -422,18 +513,32 @@ export function EnrichJoinDialog({
                   </label>
                 </div>
 
+                {fuzzyLoading && (
+                  <p className="text-[11.5px] text-text-faint">
+                    Calcul en cours{fuzzyProgress ? ` (${fuzzyProgress.done.toLocaleString('fr-FR')} / ${fuzzyProgress.total.toLocaleString('fr-FR')})` : '…'}
+                  </p>
+                )}
                 {fuzzyResolution && (
                   <div className="rounded-md bg-surface-alt px-2.5 py-2 text-[12px]">
                     <p>
                       <span className="font-medium text-validated">{fuzzyResolution.matches.size}</span> auto-appariée(s) ·{' '}
                       <span className="font-medium text-destructive">{fuzzyResolution.pending.length}</span> en attente de validation ·{' '}
-                      {fuzzyResolution.rejectedCount} rejetée(s) · {fuzzyResolution.noCandidateCount} sans bloc candidat
+                      {fuzzyResolution.rejectedCount} rejetée(s) · {fuzzyResolution.noCandidateCount} sans bloc candidat ·{' '}
+                      <span className="font-medium text-destructive">{unmatchedRight.length}</span> ligne(s) de droite jamais appariée(s)
+                      {fuzzyLoading && <span className="ml-1 text-text-faint">(recalcul en cours…)</span>}
                     </p>
-                    {fuzzyResolution.pending.length > 0 && (
-                      <Button size="sm" className="mt-1.5" onClick={openValidation}>
-                        Valider les {fuzzyResolution.pending.length} paire(s) en attente
-                      </Button>
-                    )}
+                    <div className="mt-1.5 flex gap-2">
+                      {fuzzyResolution.pending.length > 0 && (
+                        <Button size="sm" onClick={openValidation}>
+                          Valider les {fuzzyResolution.pending.length} paire(s) en attente
+                        </Button>
+                      )}
+                      {unmatchedRight.length > 0 && (
+                        <Button size="sm" variant="outline" onClick={() => setShowingUnmatchedRight(true)}>
+                          Voir les {unmatchedRight.length} ligne(s) de droite non appariées
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -542,6 +647,7 @@ export function EnrichJoinDialog({
                 <p className="font-medium text-text">
                   {exactMatched.toLocaleString('fr-FR')} ligne(s) appariée(s), {exactUnmatched.toLocaleString('fr-FR')} non appariée(s),{' '}
                   {exactAmbiguous.toLocaleString('fr-FR')} ambiguë(s) sur {table.rows.length.toLocaleString('fr-FR')} lignes.
+                  {exactLoading && <span className="ml-2 font-normal text-text-faint">(recalcul en cours…)</span>}
                 </p>
                 <div className="mt-1.5 flex gap-2">
                   <Button variant="outline" size="sm" disabled={exactUnmatched === 0} onClick={() => exportExactSubset((n) => n === 0, 'non appariées')}>
@@ -561,7 +667,7 @@ export function EnrichJoinDialog({
           </div>
         )}
 
-        {!validating && (
+        {!validating && !showingUnmatchedRight && (
           <DialogFooter>
             <Button variant="ghost" onClick={() => onOpenChange(false)}>
               Annuler

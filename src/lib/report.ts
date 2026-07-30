@@ -15,6 +15,7 @@ const TYPE_LABEL: Record<string, string> = {
   filter_rows: 'Filtrer des lignes',
   deduplicate: 'Dédoublonner',
   enrich_join: 'Rapprocher / enrichir',
+  append_rows: 'Ajouter des lignes depuis un fichier',
 };
 
 export function operationLabel(type: string): string {

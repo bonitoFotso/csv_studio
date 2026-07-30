@@ -81,3 +81,12 @@ body {
   color: var(--color-empty-cell);
   font-style: italic;
 }
+
+@keyframes busy-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}

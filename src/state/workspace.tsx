@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { createId } from '@/engine/ids.ts';
 import { createPipeline } from '@/engine/pipeline.ts';
-import { replay } from '@/engine/replay.ts';
-import type { Pipeline, Table } from '@/engine/types.ts';
+import type { OperationReport, Pipeline, Table } from '@/engine/types.ts';
 import { deleteWorkspaceEntry, loadWorkspace, saveActiveId, saveWorkspaceEntry, type StoredWorkspaceEntry } from '@/persistence/db.ts';
+import { workerClient } from '@/worker/client.ts';
 
 export interface WorkspaceEntry {
   id: string;
@@ -154,23 +154,74 @@ export function useWorkspace() {
   };
 }
 
-/** Table active + son pipeline + la table affichée (rejouée jusqu'au curseur). Recalculée à chaque changement de pipeline. */
+interface CachedReplay {
+  sourceTable: Table;
+  pipeline: Pipeline;
+  auxiliaryTables: Record<string, Table>;
+  table: Table;
+  reportsByIndex: Map<number, OperationReport>;
+}
+
+/**
+ * Table active + son pipeline + la table affichée (rejouée jusqu'au curseur).
+ * Le rejeu tourne dans un Worker (voir `src/worker/`) pour ne jamais geler l'UI sur une grosse table.
+ * On garde le dernier résultat connu par onglet : changer d'onglet ou rouvrir un onglet déjà calculé
+ * ne redéclenche pas de calcul tant que son pipeline n'a pas changé (comparaison par référence).
+ */
 export function useActiveTable() {
   const { state } = useWorkspaceContext();
   const entry = state.activeId ? state.entries[state.activeId] : null;
 
-  const displayResult = React.useMemo(() => {
-    if (!entry) return null;
-    return replay(entry.sourceTable, entry.pipeline.steps, entry.pipeline.cursor, {
+  const cacheRef = React.useRef(new Map<string, CachedReplay>());
+  const [, forceRender] = React.useReducer((c: number) => c + 1, 0);
+  const [recalculating, setRecalculating] = React.useState(false);
+  const [progress, setProgress] = React.useState<{ done: number; total: number } | null>(null);
+
+  React.useEffect(() => {
+    if (!entry) return;
+    const cached = cacheRef.current.get(entry.id);
+    const stillValid = cached && cached.sourceTable === entry.sourceTable && cached.pipeline === entry.pipeline && cached.auxiliaryTables === entry.auxiliaryTables;
+    if (stillValid) return;
+
+    setRecalculating(true);
+    setProgress(null);
+
+    const call = workerClient.replay(entry.sourceTable, entry.pipeline.steps, entry.pipeline.cursor, {
       auxiliaryTables: Object.values(entry.auxiliaryTables),
+      onStepProgress: (done, total) => setProgress({ done, total }),
     });
+
+    call.promise
+      .then((result) => {
+        cacheRef.current.set(entry.id, {
+          sourceTable: entry.sourceTable,
+          pipeline: entry.pipeline,
+          auxiliaryTables: entry.auxiliaryTables,
+          table: result.table,
+          reportsByIndex: result.reportsByIndex,
+        });
+        setRecalculating(false);
+        setProgress(null);
+        forceRender();
+      })
+      .catch((err) => {
+        console.error('Échec du rejeu du pipeline', err);
+        setRecalculating(false);
+        setProgress(null);
+      });
+
+    return () => call.cancel();
   }, [entry]);
 
-  if (!entry || !displayResult) return null;
+  if (!entry) return null;
+  const cached = cacheRef.current.get(entry.id);
+  if (!cached) return null; // premier calcul de cet onglet, pas encore de résultat à afficher
 
   return {
     entry,
-    displayTable: displayResult.table,
-    reportsByIndex: displayResult.reportsByIndex,
+    displayTable: cached.table,
+    reportsByIndex: cached.reportsByIndex,
+    recalculating,
+    progress,
   };
 }

@@ -1,5 +1,6 @@
 import { registerOperation } from '../registry.ts';
 import { addConcatColumnDefinition } from './addConcatColumn.ts';
+import { appendRowsDefinition } from './appendRows.ts';
 import { addConstantColumnDefinition } from './addConstantColumn.ts';
 import { addExpressionColumnDefinition } from './addExpressionColumn.ts';
 import { addExtractColumnDefinition } from './addExtractColumn.ts';
@@ -34,4 +35,5 @@ export function registerAllOperations(): void {
   registerOperation(filterRowsDefinition);
   registerOperation(deduplicateDefinition);
   registerOperation(enrichJoinDefinition);
+  registerOperation(appendRowsDefinition);
 }

@@ -1,6 +1,7 @@
 import { createId } from '../ids.ts';
 import { aggregateValues, matchRowsExact, type AggregateFn, type KeyPair } from '../join.ts';
-import { resolveFuzzyMatches, type FuzzyManualDecision, type FuzzyMatchConfig } from '../fuzzyJoin.ts';
+import type { KeyNormalization } from '../keyNormalize.ts';
+import { resolveFuzzyMatches, type FuzzyForcedPair, type FuzzyManualDecision, type FuzzyMatchConfig } from '../fuzzyJoin.ts';
 import type { ApplyContext, Column, ColumnId, OperationDefinition, PortableParams, RebindContext, Row, Table } from '../types.ts';
 import { columnName, makeReport, resolveId } from './reportUtil.ts';
 
@@ -161,6 +162,7 @@ function applyFuzzy(table: Table, rightTable: Table, params: EnrichJoinParams) {
 interface PortableKeyPair {
   leftName: string;
   rightName: string;
+  normalization?: KeyNormalization;
 }
 
 interface PortableCopyColumn {
@@ -182,6 +184,7 @@ interface PortableFuzzyConfig {
   thresholdHigh: number;
   thresholdLow: number;
   manualDecisions: FuzzyManualDecision[];
+  forcedPairs?: FuzzyForcedPair[];
 }
 
 interface PortableEnrichJoinParams {
@@ -214,7 +217,7 @@ export const enrichJoinDefinition: OperationDefinition<EnrichJoinParams> = {
       const rightName = columnName(rightTable, p.rightColumnId);
       leftNames.push(leftName);
       rightNames.push(rightName);
-      return { leftName, rightName };
+      return { leftName, rightName, normalization: p.normalization };
     });
 
     const copyColumns: PortableCopyColumn[] = params.copyColumns.map((c) => {
@@ -246,7 +249,7 @@ export const enrichJoinDefinition: OperationDefinition<EnrichJoinParams> = {
         const rightName = columnName(rightTable, p.rightColumnId);
         leftNames.push(leftName);
         rightNames.push(rightName);
-        return { leftName, rightName };
+        return { leftName, rightName, normalization: p.normalization };
       });
       fuzzy = {
         leftKeyNames,
@@ -257,6 +260,7 @@ export const enrichJoinDefinition: OperationDefinition<EnrichJoinParams> = {
         thresholdLow: params.fuzzy.thresholdLow,
         // Indexées par valeurs de clé normalisées, pas par colonne : voyagent telles quelles.
         manualDecisions: params.fuzzy.manualDecisions,
+        forcedPairs: params.fuzzy.forcedPairs,
       };
     }
 
@@ -289,6 +293,7 @@ export const enrichJoinDefinition: OperationDefinition<EnrichJoinParams> = {
     const keyPairs: KeyPair[] = p.keyPairs.map((kp) => ({
       leftColumnId: resolveId(nameToId, kp.leftName),
       rightColumnId: resolveId(rightNameToId, kp.rightName),
+      normalization: kp.normalization,
     }));
 
     const copyColumns: CopyColumn[] = p.copyColumns.map((c) => ({ rightColumnId: resolveId(rightNameToId, c.rightName), asName: c.asName }));
@@ -307,11 +312,13 @@ export const enrichJoinDefinition: OperationDefinition<EnrichJoinParams> = {
         blockingPairs: p.fuzzy.blockingPairs.map((bp) => ({
           leftColumnId: resolveId(nameToId, bp.leftName),
           rightColumnId: resolveId(rightNameToId, bp.rightName),
+          normalization: bp.normalization,
         })),
         tokenized: p.fuzzy.tokenized,
         thresholdHigh: p.fuzzy.thresholdHigh,
         thresholdLow: p.fuzzy.thresholdLow,
         manualDecisions: p.fuzzy.manualDecisions,
+        forcedPairs: p.fuzzy.forcedPairs,
       };
     }
 

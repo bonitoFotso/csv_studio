@@ -21,6 +21,43 @@ describe('matchRowsExact', () => {
     expect(results[1].matches).toHaveLength(2);
     expect(results[2].matches).toHaveLength(0);
   });
+
+  it('sans normalisation (défaut), deux dates écrites différemment ne matchent pas', () => {
+    const left = createTableFromRows('gauche', ['naissance'], [{ naissance: '19/07/2026' }]);
+    const right = createTableFromRows('droite', ['date_naissance'], [{ date_naissance: '19-07-2026' }]);
+    const keyPairs = [{ leftColumnId: getColumnId(left, 'naissance'), rightColumnId: getColumnId(right, 'date_naissance') }];
+    const results = matchRowsExact(left.rows, right.rows, keyPairs);
+    expect(results[0].matches).toHaveLength(0);
+  });
+
+  it('normalization "date" fait matcher des dates aux séparateurs différents', () => {
+    const left = createTableFromRows('gauche', ['naissance'], [{ naissance: '19/07/2026' }]);
+    const right = createTableFromRows('droite', ['date_naissance'], [{ date_naissance: '19-07-2026' }]);
+    const keyPairs = [
+      { leftColumnId: getColumnId(left, 'naissance'), rightColumnId: getColumnId(right, 'date_naissance'), normalization: 'date' as const },
+    ];
+    const results = matchRowsExact(left.rows, right.rows, keyPairs);
+    expect(results[0].matches).toHaveLength(1);
+  });
+
+  it('normalization "text" fait matcher malgré casse, accents et espaces', () => {
+    const left = createTableFromRows('gauche', ['nom'], [{ nom: '  Fotso ' }]);
+    const right = createTableFromRows('droite', ['nom_complet'], [{ nom_complet: 'FOTSO' }]);
+    const keyPairs = [{ leftColumnId: getColumnId(left, 'nom'), rightColumnId: getColumnId(right, 'nom_complet'), normalization: 'text' as const }];
+    const results = matchRowsExact(left.rows, right.rows, keyPairs);
+    expect(results[0].matches).toHaveLength(1);
+  });
+
+  it('clé composite avec normalisation mixte (une colonne date, une colonne texte)', () => {
+    const left = createTableFromRows('gauche', ['nom', 'naissance'], [{ nom: 'Fotso', naissance: '9/7/2026' }]);
+    const right = createTableFromRows('droite', ['nom', 'naissance'], [{ nom: 'FOTSO', naissance: '09-07-2026' }]);
+    const keyPairs = [
+      { leftColumnId: getColumnId(left, 'nom'), rightColumnId: getColumnId(right, 'nom'), normalization: 'text' as const },
+      { leftColumnId: getColumnId(left, 'naissance'), rightColumnId: getColumnId(right, 'naissance'), normalization: 'date' as const },
+    ];
+    const results = matchRowsExact(left.rows, right.rows, keyPairs);
+    expect(results[0].matches).toHaveLength(1);
+  });
 });
 
 describe('aggregateValues', () => {

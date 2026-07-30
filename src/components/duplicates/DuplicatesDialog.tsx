@@ -3,12 +3,14 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
-import { computeDuplicateGroups, type DedupMode } from '@/engine/dedupe.ts';
+import type { DedupMode } from '@/engine/dedupe.ts';
 import { addStep, createOperation } from '@/engine/pipeline.ts';
 import { cloneTableWithRows } from '@/engine/table.ts';
 import type { DeduplicateParams, DedupAction } from '@/engine/operations/deduplicate.ts';
 import type { ColumnId, Pipeline, Table as EngineTable } from '@/engine/types.ts';
 import { useWorkspace } from '@/state/workspace.tsx';
+import { useWorkerCall } from '@/hooks/useWorkerCall.ts';
+import { workerClient } from '@/worker/client.ts';
 import { DuplicateGroupBlock, ACTION_LABEL } from '@/components/duplicates/DuplicateGroupBlock.tsx';
 
 const PAGE_SIZE = 30;
@@ -45,10 +47,11 @@ export function DuplicatesDialog({
     }
   }, [open]);
 
-  const groups = React.useMemo(() => {
-    if (keyColumnIds.size === 0) return [];
-    return computeDuplicateGroups(table, [...keyColumnIds], mode);
-  }, [table, keyColumnIds, mode]);
+  const { data: groupsResult, loading: groupsLoading } = useWorkerCall(
+    () => (keyColumnIds.size === 0 ? null : workerClient.computeDuplicateGroups(table, [...keyColumnIds], mode)),
+    [table, keyColumnIds, mode],
+  );
+  const groups = groupsResult ?? [];
 
   const totalDuplicateRows = groups.reduce((sum, g) => sum + g.rows.length, 0);
 
@@ -129,6 +132,8 @@ export function DuplicatesDialog({
 
         {keyColumnIds.size === 0 ? (
           <p className="py-6 text-center text-[12.5px] text-text-faint">Choisissez au moins une colonne-clé pour détecter les doublons.</p>
+        ) : groupsLoading && groups.length === 0 ? (
+          <p className="py-6 text-center text-[12.5px] text-text-faint">Calcul des groupes en cours…</p>
         ) : groups.length === 0 ? (
           <p className="py-6 text-center text-[12.5px] text-text-faint">Aucun doublon détecté sur ces colonnes.</p>
         ) : (
@@ -151,6 +156,7 @@ export function DuplicatesDialog({
             <p className="mb-2 text-[12.5px] font-medium text-destructive">
               {groups.length} groupe(s) de doublons, {totalDuplicateRows} lignes concernées sur {table.rows.length} — {estimatedRemoved} ligne(s) seraient
               supprimées avec les actions actuelles.
+              {groupsLoading && <span className="ml-2 font-normal text-text-faint">(recalcul en cours…)</span>}
             </p>
 
             <div className="max-h-[45vh] space-y-2 overflow-y-auto pr-1">

@@ -1,20 +1,28 @@
+import { normalizeKeyValue, type KeyNormalization } from './keyNormalize.ts';
 import type { ColumnId, Row } from './types.ts';
 
 export interface KeyPair {
   leftColumnId: ColumnId;
   rightColumnId: ColumnId;
+  /** Normalisation appliquée aux deux côtés avant comparaison (formats de date, casse/accents/espaces...). Par défaut 'none' (comparaison brute). */
+  normalization?: KeyNormalization;
 }
 
-const KEY_SEPARATOR = '';
+const KEY_SEPARATOR = '';
 
-function buildKey(row: Row, columnIds: ColumnId[]): string {
-  return columnIds.map((id) => row.cells[id] ?? '').join(KEY_SEPARATOR);
+function buildKeyForSide(row: Row, pairs: KeyPair[], side: 'left' | 'right'): string {
+  return pairs
+    .map((p) => {
+      const columnId = side === 'left' ? p.leftColumnId : p.rightColumnId;
+      return normalizeKeyValue(row.cells[columnId] ?? '', p.normalization ?? 'none');
+    })
+    .join(KEY_SEPARATOR);
 }
 
-export function indexRowsByKey(rows: Row[], columnIds: ColumnId[]): Map<string, Row[]> {
+function indexRowsByKeyPairs(rows: Row[], pairs: KeyPair[], side: 'left' | 'right'): Map<string, Row[]> {
   const index = new Map<string, Row[]>();
   for (const row of rows) {
-    const key = buildKey(row, columnIds);
+    const key = buildKeyForSide(row, pairs, side);
     const bucket = index.get(key);
     if (bucket) bucket.push(row);
     else index.set(key, [row]);
@@ -27,12 +35,10 @@ export interface MatchResult {
   matches: Row[];
 }
 
-/** Rapprochement exact : une ligne de gauche peut avoir 0, 1 ou plusieurs correspondances à droite. */
+/** Rapprochement exact (après normalisation éventuelle) : une ligne de gauche peut avoir 0, 1 ou plusieurs correspondances à droite. */
 export function matchRowsExact(leftRows: Row[], rightRows: Row[], keyPairs: KeyPair[]): MatchResult[] {
-  const rightColumnIds = keyPairs.map((p) => p.rightColumnId);
-  const leftColumnIds = keyPairs.map((p) => p.leftColumnId);
-  const index = indexRowsByKey(rightRows, rightColumnIds);
-  return leftRows.map((leftRow) => ({ leftRow, matches: index.get(buildKey(leftRow, leftColumnIds)) ?? [] }));
+  const index = indexRowsByKeyPairs(rightRows, keyPairs, 'right');
+  return leftRows.map((leftRow) => ({ leftRow, matches: index.get(buildKeyForSide(leftRow, keyPairs, 'left')) ?? [] }));
 }
 
 export type AggregateFn = 'sum' | 'max' | 'min' | 'concat';
