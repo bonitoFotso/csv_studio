@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { Copy, Download, FileText, Filter, FolderOpen, Link2, ListPlus, Save, Sigma } from 'lucide-react';
+import { Copy, Download, FileText, Filter, FolderOpen, Link2, ListPlus, Save, Sigma, Sparkles } from 'lucide-react';
 import { addStep, createOperation } from '@csv-studio/core/engine/pipeline.ts';
+import { buildAssistantProfileExport } from '@csv-studio/core/engine/assistantExport.ts';
 import type { ReorderColumnsParams } from '@csv-studio/core/engine/operations/reorderColumns.ts';
 import { mergeVisibleReorder } from '@/lib/columnOrder.ts';
 import { WorkspaceProvider, useActiveTable, useWorkspace } from '@/state/workspace.tsx';
@@ -38,6 +39,7 @@ function Workspace() {
   const [saveRecipeOpen, setSaveRecipeOpen] = React.useState(false);
   const [loadRecipeOpen, setLoadRecipeOpen] = React.useState(false);
   const [selectedColumnIds, setSelectedColumnIds] = React.useState<Set<string>>(new Set());
+  const [profileCopied, setProfileCopied] = React.useState(false);
 
   // `activeId` (synchrone) décide de l'écran affiché ; `active` (résultat du rejeu, calculé
   // dans le Worker) peut être transitoirement null même quand un onglet est ouvert — on ne
@@ -93,6 +95,19 @@ function Workspace() {
                 <Button size="sm" variant="outline" onClick={() => setReportExportOpen(true)}>
                   <FileText size={14} />
                   Rapport PDF
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(buildAssistantProfileExport(active.displayTable)).then(() => {
+                      setProfileCopied(true);
+                      setTimeout(() => setProfileCopied(false), 1500);
+                    });
+                  }}
+                >
+                  <Sparkles size={14} />
+                  {profileCopied ? 'Copié !' : 'Copier pour un assistant'}
                 </Button>
                 <div className="mx-1 h-6 w-px bg-border" />
                 <Button size="sm" variant="ghost" onClick={() => setLoadRecipeOpen(true)}>

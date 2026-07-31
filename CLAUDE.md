@@ -199,8 +199,28 @@ que de sauter la phase, le protocole stdio de MCP étant simple (un message JSON
 - Vérifié avec un vrai processus (`bun run apps/mcp/src/index.ts <workdir>` piloté par de vraies
   lignes JSON-RPC sur stdin), pas seulement les tests unitaires du dispatcher — y compris une
   tentative de sortie du répertoire de travail, bien bloquée.
-- Pas fait : le bouton « Copier le profil pour un assistant » côté `apps/web` (pont app ↔ MCP —
-  même contrat que `profile_csv`, décrit dans le prompt) n'est pas construit ; voir `NIGHT_LOG.md`.
+- Le pont app ↔ MCP (« Copier le profil pour un assistant ») est construit — voir
+  `anonymize.ts`/`assistantExport.ts` ci-dessous, pas dans `apps/mcp` : c'est une fonctionnalité
+  `apps/web`, le contrat n'est pas identique à `profile_csv` (échantillon anonymisé en plus, pas de
+  `topValues`).
+
+## Anonymisation et export « profil pour un assistant » (`packages/core/src/engine/`)
+
+- `anonymize.ts` : `anonymizeValue(value, detectedType)` — jamais le contenu réel, seulement sa
+  forme (longueur, séparateur décimal, format de date, casse). **Piège corrigé** : une colonne
+  `decimal` a des valeurs individuelles qui ne matchent pas toujours `DECIMAL_RE` (ex. `"16"` sans
+  séparateur) et retombent sur l'anonymisation texte — si ce repli ne touchait que les lettres
+  (version initiale), un chiffre réel fuitait tel quel. Trouvé en vérifiant réellement dans un
+  navigateur (presse-papiers relu après clic), pas seulement par les tests unitaires — le repli
+  texte randomise maintenant aussi les chiffres. `buildAnonymizedSample(table, n)` anonymise les
+  `n` premières lignes sans jamais muter `table`.
+- `reportSpec.ts` : `REPORT_SPEC_FORMAT_GUIDE`, rappel condensé (pas la doc complète du README) du
+  format `ReportSpec` — collé dans l'export pour qu'un assistant puisse écrire un document valide
+  sans accès au dépôt.
+- `assistantExport.ts` : `buildAssistantProfileExport(table)` assemble profil de colonnes (sans
+  `topValues` ni exemples d'anomalie — ce sont de vraies valeurs de la donnée) + échantillon
+  anonymisé + rappel `ReportSpec`, en Markdown. Bouton « Copier pour un assistant » dans
+  `apps/web/src/App.tsx` (toolbar), copie via `navigator.clipboard.writeText`.
 
 ## Structure
 
