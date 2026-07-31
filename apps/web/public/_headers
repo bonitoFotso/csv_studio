@@ -22,9 +22,15 @@
 # nécessaire au Web Worker (apps/web/src/worker/) dont dépend tout le rejeu de pipeline sans geler
 # l'UI. style-src inclut 'unsafe-inline' car plusieurs composants posent une largeur/pourcentage en
 # style inline React (barre de progression, largeur de colonne TanStack Table) — pas de script
-# inline, pas d'eval (l'évaluateur d'expression du moteur est un arbre restreint, jamais un eval()
-# de texte libre).
+# inline, pas d'eval de texte libre (l'évaluateur d'expression du moteur est un arbre restreint) —
+# mais 'wasm-unsafe-eval' est nécessaire : @react-pdf/renderer (fontkit, pour le sous-ensemblage/la
+# compression de la police embarquée) compile un module WebAssembly en interne, et
+# WebAssembly.instantiate() est gouverné par script-src comme n'importe quel eval — découvert en
+# testant le vrai déploiement (le serveur de dev Vite n'applique aucune CSP, ce test n'était donc
+# possible qu'une fois réellement en ligne). 'wasm-unsafe-eval' autorise spécifiquement la
+# compilation WebAssembly sans réintroduire 'unsafe-eval' (qui autoriserait en plus l'évaluation de
+# chaînes JavaScript arbitraires, ce que rien dans ce projet ne fait ni ne doit faire).
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; worker-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; worker-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
   X-Content-Type-Options: nosniff
   Referrer-Policy: same-origin
