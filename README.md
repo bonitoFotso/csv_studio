@@ -179,20 +179,21 @@ Mesuré sur une table de test générée pour l'occasion : 50 000 lignes × 25 c
   important pour un gros fichier, mais aussi les changements les plus invasifs de la liste — à
   faire ensemble plutôt qu'en session autonome.
 
-## Déploiement (fichiers préparés, jamais appliqués)
+## Déploiement
 
-`apps/web/wrangler.toml` et `apps/web/public/_headers` sont prêts pour un déploiement sur
-Cloudflare Workers (assets statiques), mais **aucune commande `wrangler` n'a été exécutée** et
-**aucun déploiement n'a eu lieu** — ces fichiers sont uniquement écrits et committés, à appliquer
-quand tu le décideras.
+Déployé sur Cloudflare Workers (assets statiques) : **https://csv-studio.bonitofotso55.workers.dev**
+(`bun run build` puis `npx wrangler deploy` depuis `apps/web/`, avec `apps/web/wrangler.toml` —
+`[assets]` pointant vers `apps/web/dist/`, mode SPA via `not_found_handling = "single-page-application"`).
 
-- `wrangler.toml` : `[assets]` pointant vers `apps/web/dist/` (le build de production), en mode
-  SPA (`not_found_handling = "single-page-application"`).
-- `public/_headers` (copié tel quel dans `dist/` par Vite) : cache immuable sur les assets hashés
-  (`/assets/*`), `no-cache` sur `index.html`, et une CSP stricte — notamment `connect-src 'none'`
-  (l'app n'ouvre aucune connexion réseau, promesse centrale du projet) et `worker-src 'self'`
-  (nécessaire au Web Worker dont dépend tout le rejeu de pipeline). `style-src` garde
-  `'unsafe-inline'` parce que plusieurs composants posent une largeur en style React inline (barre
-  de progression, colonnes redimensionnables de la grille) ; `script-src` reste strict, sans
-  `'unsafe-eval'` (l'évaluateur d'expression du moteur est un arbre restreint, jamais un `eval()`
-  de texte libre sur une chaîne saisie par l'utilisateur).
+`apps/web/public/_headers` (copié tel quel dans `dist/` par Vite) pose : cache immuable sur les
+assets hashés (`/assets/*`), `no-cache` sur `index.html`, et une CSP stricte —
+`connect-src 'self'` (l'app n'ouvre aucune connexion vers un tiers, mais le bouton d'export PDF
+charge sa police embarquée par `fetch()`, strictement same-origin), `worker-src 'self'`
+(nécessaire au Web Worker dont dépend tout le rejeu de pipeline), `style-src 'unsafe-inline'`
+(largeurs en style React inline — barre de progression, colonnes redimensionnables de la grille).
+`script-src 'self' 'wasm-unsafe-eval'` — **pas** `'unsafe-eval'` : rien dans ce projet n'évalue de
+chaîne JavaScript arbitraire (l'évaluateur d'expression du moteur est un arbre restreint), mais
+`@react-pdf/renderer` compile un module WebAssembly en interne (fontkit, pour la police embarquée)
+et `WebAssembly.instantiate()` est gouverné par `script-src` comme n'importe quel eval —
+**découvert seulement après la mise en ligne** : le serveur de dev Vite n'applique aucune CSP,
+cette classe de bug n'est donc visible qu'en conditions réelles de déploiement, jamais en local.

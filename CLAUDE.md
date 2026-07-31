@@ -219,17 +219,29 @@ apps/web/wrangler.toml         config Cloudflare Workers (assets statiques) — 
 apps/web/public/_headers       cache + CSP pour le déploiement — jamais appliqué
 ```
 
-## Déploiement (préparé, jamais appliqué)
+## Déploiement
 
-`apps/web/wrangler.toml` (`[assets]` → `apps/web/dist/`, mode SPA) et `apps/web/public/_headers`
-(cache immuable sur `/assets/*`, `no-cache` sur `index.html`, CSP stricte) sont écrits et committés
-mais **aucune commande `wrangler` n'a été exécutée**. Points à retenir si tu modifies la CSP :
-`worker-src 'self'` est nécessaire (le Web Worker est au cœur de l'app), `style-src 'unsafe-inline'`
-aussi (largeurs en style React inline dans `DataGrid.tsx`/`ColumnProfilePanel.tsx`/
-`busy-indicator.tsx`), mais `script-src` n'a jamais besoin de `'unsafe-eval'` — vérifié par
-recherche exhaustive (`grep`), aucun `eval()`/`new Function` nulle part dans le projet. `connect-src`
-est `'self'`, pas `'none'` (revu après le câblage du bouton d'export PDF) : la police embarquée se
-charge par `fetch()` côté navigateur, mais toujours vers l'origine de l'app elle-même.
+Déployé sur Cloudflare Workers (assets statiques) : **https://csv-studio.bonitofotso55.workers.dev**.
+`apps/web/wrangler.toml` (`[assets]` → `./dist`, mode SPA) ; redéployer avec `bun run build` (depuis
+la racine) puis `npx wrangler deploy` (depuis `apps/web/`, nécessite `wrangler whoami` authentifié).
+
+`apps/web/public/_headers` (cache immuable sur `/assets/*`, `no-cache` sur `index.html`, CSP
+stricte). Points à retenir si tu modifies la CSP : `worker-src 'self'` est nécessaire (le Web
+Worker est au cœur de l'app), `style-src 'unsafe-inline'` aussi (largeurs en style React inline
+dans `DataGrid.tsx`/`ColumnProfilePanel.tsx`/`busy-indicator.tsx`), `connect-src 'self'` pour le
+fetch same-origin de la police embarquée du bouton d'export PDF. `script-src` a besoin de
+`'self' 'wasm-unsafe-eval'` — **pas** `'unsafe-eval'` (aucun `eval()`/`new Function` nulle part
+dans le projet, vérifié par recherche exhaustive) : `'wasm-unsafe-eval'` autorise spécifiquement
+`WebAssembly.instantiate()` sans autoriser l'évaluation de chaînes JS arbitraires. Voir « Export
+PDF » ci-dessus pour pourquoi WebAssembly est nécessaire (fontkit, dans `@react-pdf/renderer`).
+
+**Piège découvert en production, invisible en local** : le serveur de dev Vite n'applique
+**aucune** CSP — un problème de CSP (comme l'oubli initial de `'wasm-unsafe-eval'`, qui cassait la
+génération PDF avec `WebAssembly.instantiate() blocked by CSP`) ne peut être détecté qu'après un
+vrai déploiement, jamais par un test en local aussi poussé soit-il (même un test réel dans un
+navigateur headless piloté par CDP ne l'aurait pas vu, puisqu'il ciblait le serveur de dev). Après
+toute modification de la CSP touchant à une fonctionnalité réseau/WebAssembly/Worker, redéployer et
+retester contre l'URL réelle, pas seulement `bun run dev`.
 
 ## Session NIGHT_RUN (agrégation, rapports PDF, monorepo, MCP)
 
