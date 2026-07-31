@@ -16,8 +16,27 @@ bun run samples   # régénère samples/ (CSV, ReportSpec, PDF brouillon/officie
 
 Workspaces Bun : `packages/core` (moteur pur, aucune dépendance React/DOM/navigateur — types,
 opérations, agrégation, validation de `Recipe`/`ReportSpec`, parseurs CSV), `apps/web` (l'app,
-consomme `@csv-studio/core`), `apps/mcp` (serveur MCP stdio, squelette pour l'instant — voir
-`CLAUDE.md` pour le détail de la répartition).
+consomme `@csv-studio/core`), `apps/mcp` (serveur MCP stdio — voir ci-dessous et `CLAUDE.md` pour
+le détail de la répartition).
+
+## Serveur MCP (`apps/mcp/`)
+
+Serveur MCP **stdio local uniquement** : lit des fichiers CSV sur le disque, n'ouvre aucune
+connexion sortante. Transport JSON-RPC 2.0 écrit à la main (aucun SDK MCP ajouté). Six outils —
+`profile_csv`, `preview_pipeline`, `apply_pipeline`, `match_files`, `find_duplicates`,
+`build_report` — chacun réutilisant directement les fonctions déjà testées de `@csv-studio/core`.
+Toute réponse est bornée : jamais une table entière, toujours un résumé, un échantillon plafonné
+(30 lignes par défaut, 200 au plafond configurable) et le total réel annoncé avec un indicateur de
+troncature. Les écritures (`apply_pipeline`, `match_files` avec un chemin de sortie) n'écrasent
+jamais un fichier existant sans `overwrite: true`, et restent confinées au répertoire de travail
+passé au démarrage.
+
+```bash
+bun run apps/mcp/src/index.ts /chemin/vers/le/répertoire/de/travail
+```
+
+Pas encore fait : le bouton « Copier le profil pour un assistant » dans l'app (pont app ↔ MCP
+décrit dans le prompt de conception) n'est pas construit — voir `NIGHT_LOG.md`, phase 6.
 
 ## État actuel
 

@@ -119,7 +119,7 @@ tout le projet, partagée avec l'opération `summarize` du pipeline et l'export 
 ```
 packages/core/    @csv-studio/core — le moteur, TypeScript pur, aucune dépendance React/DOM/navigateur
 apps/web/         @csv-studio/web — l'app actuelle, consomme @csv-studio/core
-apps/mcp/         @csv-studio/mcp — serveur MCP stdio (squelette ; implémentation à une phase suivante)
+apps/mcp/         @csv-studio/mcp — serveur MCP stdio, six outils (voir section dédiée ci-dessous)
 ```
 
 Mis en place à la phase 5 de la session NIGHT_RUN (voir `NIGHT_LOG.md`) : le moteur a été déplacé
@@ -134,6 +134,41 @@ symlinks `node_modules/@csv-studio/*` posés par `bun install` et la carte `expo
 `packages/core/package.json` (`"./*": "./src/*"`, imports profonds avec extension `.ts` explicite —
 mêmes conventions `moduleResolution: bundler` partout).
 
+## Serveur MCP (`apps/mcp/`)
+
+Implémenté à la phase 6 de la session NIGHT_RUN. Stdio local uniquement, aucune connexion
+sortante. Aucun SDK MCP n'est nommé dans `prompt-2-csv-studio-rapports-mcp.md` (règle absolue de
+la nuit : jamais de dépendance non nommée) → le transport JSON-RPC 2.0 est écrit à la main plutôt
+que de sauter la phase, le protocole stdio de MCP étant simple (un message JSON par ligne).
+
+- `jsonrpc.ts` : types JSON-RPC 2.0 + `LineMessageParser` (reconstitue les lignes coupées entre
+  deux chunks de stdin — cas explicitement testé).
+- `server.ts` : `handleMessage(msg, ctx)` — dispatch `initialize`/`notifications/initialized`/
+  `ping`/`tools/list`/`tools/call`. Distinction importante : une méthode inconnue ou une requête
+  malformée devient une erreur JSON-RPC (`error.code`) ; un échec **d'outil** (fichier manquant,
+  colonne introuvable, chemin hors du répertoire de travail) devient un résultat
+  `{ content: [...], isError: true }` — convention MCP pour qu'un modèle voie l'échec comme une
+  sortie d'outil normale, pas une exception qui casse la connexion.
+- `workdir.ts` : confine tout accès disque au répertoire de travail passé en `argv[2]` au
+  démarrage — comparaison sur le chemin résolu (`path.relative`), jamais un test de préfixe
+  textuel (`/work-evil` ne doit pas passer pour un sous-dossier de `/work`).
+- `bounded.ts` : plafond de réponse (30 lignes par défaut, 200 au plafond) — règle absolue du
+  prompt : aucun outil ne renvoie jamais une table entière.
+- `pipelineRun.ts` : réutilise `instantiateRecipe`/`replay` du core pour exécuter un pipeline JSON
+  (même vocabulaire qu'une `Recipe`, colonnes par nom) — résolution de colonnes **strictement
+  exacte**, contrairement à `suggestColumnMapping` côté app (pas d'écran de remappage possible
+  dans un contexte non interactif pour confirmer une suggestion floue). Refuse explicitement les
+  étapes `enrich_join`/`append_rows` (pas de champ `secondary` dans ce format de pipeline) — c'est
+  `match_files` qui couvre le rapprochement à deux fichiers côté MCP.
+- `tools/` : un fichier par outil (`profile_csv`, `preview_pipeline`, `apply_pipeline`,
+  `match_files`, `find_duplicates`, `build_report`), chacun réutilisant directement les fonctions
+  déjà testées du core plutôt que de dupliquer une logique parallèle.
+- Vérifié avec un vrai processus (`bun run apps/mcp/src/index.ts <workdir>` piloté par de vraies
+  lignes JSON-RPC sur stdin), pas seulement les tests unitaires du dispatcher — y compris une
+  tentative de sortie du répertoire de travail, bien bloquée.
+- Pas fait : le bouton « Copier le profil pour un assistant » côté `apps/web` (pont app ↔ MCP —
+  même contrat que `profile_csv`, décrit dans le prompt) n'est pas construit ; voir `NIGHT_LOG.md`.
+
 ## Structure
 
 ```
@@ -145,7 +180,7 @@ apps/web/src/pdf/              export PDF (géométrie, polices, traçabilité, 
 apps/web/src/components/       UI React, un dossier par fonctionnalité (columns/, filters/, join/, duplicates/, recipes/, append/, summarize/)
 apps/web/src/state/workspace.tsx  état global (React context + reducer), persistance Dexie
 apps/web/src/persistence/db.ts    schéma Dexie
-apps/mcp/src/                  serveur MCP (squelette)
+apps/mcp/src/                  serveur MCP (jsonrpc.ts, server.ts, workdir.ts, tools/*)
 ```
 
 ## Session NIGHT_RUN (agrégation, rapports PDF, monorepo, MCP)
