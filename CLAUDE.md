@@ -190,7 +190,19 @@ apps/web/src/state/workspace.tsx  état global (React context + reducer), persis
 apps/web/src/state/persistWorkspace.ts  logique pure de synchronisation Dexie (testée), extraite de workspace.tsx
 apps/web/src/persistence/db.ts    schéma Dexie
 apps/mcp/src/                  serveur MCP (jsonrpc.ts, server.ts, workdir.ts, tools/*)
+apps/web/wrangler.toml         config Cloudflare Workers (assets statiques) — jamais exécutée
+apps/web/public/_headers       cache + CSP pour le déploiement — jamais appliqué
 ```
+
+## Déploiement (préparé, jamais appliqué)
+
+`apps/web/wrangler.toml` (`[assets]` → `apps/web/dist/`, mode SPA) et `apps/web/public/_headers`
+(cache immuable sur `/assets/*`, `no-cache` sur `index.html`, CSP stricte) sont écrits et committés
+mais **aucune commande `wrangler` n'a été exécutée**. Points à retenir si tu modifies la CSP :
+`worker-src 'self'` est nécessaire (le Web Worker est au cœur de l'app), `style-src 'unsafe-inline'`
+aussi (largeurs en style React inline dans `DataGrid.tsx`/`ColumnProfilePanel.tsx`/
+`busy-indicator.tsx`), mais `script-src` n'a jamais besoin de `'unsafe-eval'` — vérifié par
+recherche exhaustive (`grep`), aucun `eval()`/`new Function` nulle part dans le projet.
 
 ## Session NIGHT_RUN (agrégation, rapports PDF, monorepo, MCP)
 

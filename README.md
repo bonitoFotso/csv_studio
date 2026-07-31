@@ -176,3 +176,21 @@ Mesuré sur une table de test générée pour l'occasion : 50 000 lignes × 25 c
   colonne plutôt qu'un tableau d'objets par ligne). Les deux sont le gain potentiel le plus
   important pour un gros fichier, mais aussi les changements les plus invasifs de la liste — à
   faire ensemble plutôt qu'en session autonome.
+
+## Déploiement (fichiers préparés, jamais appliqués)
+
+`apps/web/wrangler.toml` et `apps/web/public/_headers` sont prêts pour un déploiement sur
+Cloudflare Workers (assets statiques), mais **aucune commande `wrangler` n'a été exécutée** et
+**aucun déploiement n'a eu lieu** — ces fichiers sont uniquement écrits et committés, à appliquer
+quand tu le décideras.
+
+- `wrangler.toml` : `[assets]` pointant vers `apps/web/dist/` (le build de production), en mode
+  SPA (`not_found_handling = "single-page-application"`).
+- `public/_headers` (copié tel quel dans `dist/` par Vite) : cache immuable sur les assets hashés
+  (`/assets/*`), `no-cache` sur `index.html`, et une CSP stricte — notamment `connect-src 'none'`
+  (l'app n'ouvre aucune connexion réseau, promesse centrale du projet) et `worker-src 'self'`
+  (nécessaire au Web Worker dont dépend tout le rejeu de pipeline). `style-src` garde
+  `'unsafe-inline'` parce que plusieurs composants posent une largeur en style React inline (barre
+  de progression, colonnes redimensionnables de la grille) ; `script-src` reste strict, sans
+  `'unsafe-eval'` (l'évaluateur d'expression du moteur est un arbre restreint, jamais un `eval()`
+  de texte libre sur une chaîne saisie par l'utilisateur).
