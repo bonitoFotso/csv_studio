@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { createId } from '@/engine/ids.ts';
-import { createPipeline } from '@/engine/pipeline.ts';
-import type { OperationReport, Pipeline, Table } from '@/engine/types.ts';
+import { createId } from '@csv-studio/core/engine/ids.ts';
+import { createPipeline } from '@csv-studio/core/engine/pipeline.ts';
+import type { OperationReport, Pipeline, Table } from '@csv-studio/core/engine/types.ts';
 import { deleteWorkspaceEntry, loadWorkspace, saveActiveId, saveWorkspaceEntry, type StoredWorkspaceEntry } from '@/persistence/db.ts';
 import { workerClient } from '@/worker/client.ts';
 

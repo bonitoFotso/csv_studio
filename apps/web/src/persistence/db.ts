@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie';
-import type { Pipeline, Recipe, Table } from '@/engine/types.ts';
+import type { Pipeline, Recipe, Table } from '@csv-studio/core/engine/types.ts';
 
 export interface StoredWorkspaceEntry {
   id: string;

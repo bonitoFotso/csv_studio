@@ -1,9 +1,9 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { registerAllOperations } from '../engine/operations/index.ts';
-import { createTableFromRows } from '../engine/table.ts';
-import { createPipeline } from '../engine/pipeline.ts';
-import { computeReport } from '../engine/reportSpecCompute.ts';
-import { validateReportSpec } from '../engine/reportSpecValidate.ts';
+import { registerAllOperations } from '@csv-studio/core/engine/operations/index.ts';
+import { createTableFromRows } from '@csv-studio/core/engine/table.ts';
+import { createPipeline } from '@csv-studio/core/engine/pipeline.ts';
+import { computeReport } from '@csv-studio/core/engine/reportSpecCompute.ts';
+import { validateReportSpec } from '@csv-studio/core/engine/reportSpecValidate.ts';
 import { buildTraceability } from './traceability.ts';
 import { renderReportPdfToBuffer } from './exportReportPdf.tsx';
 

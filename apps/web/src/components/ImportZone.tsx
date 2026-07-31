@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { parseCsvFile, parseCsvText } from '@/lib/csv.ts';
-import { createTableFromRows } from '@/engine/table.ts';
+import { parseCsvFile } from '@/lib/csv.ts';
+import { parseCsvText } from '@csv-studio/core/csv.ts';
+import { createTableFromRows } from '@csv-studio/core/engine/table.ts';
 import { useWorkspace } from '@/state/workspace.tsx';
 import { Button } from '@/components/ui/button.tsx';
 

@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { Copy, Eye, EyeOff, Pencil, Sparkles, Trash2 } from 'lucide-react';
-import { addStep, createOperation } from '@/engine/pipeline.ts';
-import type { ColumnId, Pipeline, Table as EngineTable } from '@/engine/types.ts';
-import type { RenameColumnsParams } from '@/engine/operations/renameColumns.ts';
-import type { DropColumnsParams } from '@/engine/operations/dropColumns.ts';
-import type { HideColumnsParams } from '@/engine/operations/hideColumns.ts';
-import type { DuplicateColumnParams } from '@/engine/operations/duplicateColumn.ts';
+import { addStep, createOperation } from '@csv-studio/core/engine/pipeline.ts';
+import type { ColumnId, Pipeline, Table as EngineTable } from '@csv-studio/core/engine/types.ts';
+import type { RenameColumnsParams } from '@csv-studio/core/engine/operations/renameColumns.ts';
+import type { DropColumnsParams } from '@csv-studio/core/engine/operations/dropColumns.ts';
+import type { HideColumnsParams } from '@csv-studio/core/engine/operations/hideColumns.ts';
+import type { DuplicateColumnParams } from '@csv-studio/core/engine/operations/duplicateColumn.ts';
 import { useWorkspace } from '@/state/workspace.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';

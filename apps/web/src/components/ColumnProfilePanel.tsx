@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { computeAllProfiles, type AnomalyKind, type DetectedType } from '@/engine/profile.ts';
-import type { Table as EngineTable } from '@/engine/types.ts';
+import { computeAllProfiles, type AnomalyKind, type DetectedType } from '@csv-studio/core/engine/profile.ts';
+import type { Table as EngineTable } from '@csv-studio/core/engine/types.ts';
 import { Badge } from '@/components/ui/badge.tsx';
 
 const TYPE_LABEL: Record<DetectedType, string> = {

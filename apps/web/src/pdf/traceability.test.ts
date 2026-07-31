@@ -1,11 +1,11 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { registerAllOperations } from '../engine/operations/index.ts';
-import { createTableFromRows, getColumnId } from '../engine/table.ts';
-import { createOperation, createPipeline, addStep } from '../engine/pipeline.ts';
-import { replay } from '../engine/replay.ts';
+import { registerAllOperations } from '@csv-studio/core/engine/operations/index.ts';
+import { createTableFromRows, getColumnId } from '@csv-studio/core/engine/table.ts';
+import { createOperation, createPipeline, addStep } from '@csv-studio/core/engine/pipeline.ts';
+import { replay } from '@csv-studio/core/engine/replay.ts';
 import { buildTraceability } from './traceability.ts';
-import type { EnrichJoinParams } from '../engine/operations/enrichJoin.ts';
-import type { DropColumnsParams } from '../engine/operations/dropColumns.ts';
+import type { EnrichJoinParams } from '@csv-studio/core/engine/operations/enrichJoin.ts';
+import type { DropColumnsParams } from '@csv-studio/core/engine/operations/dropColumns.ts';
 
 beforeAll(() => registerAllOperations());
 

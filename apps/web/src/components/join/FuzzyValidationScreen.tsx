@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Check, SkipForward, X } from 'lucide-react';
-import type { PendingFuzzyPair } from '@/engine/fuzzyJoin.ts';
-import type { Column } from '@/engine/types.ts';
+import type { PendingFuzzyPair } from '@csv-studio/core/engine/fuzzyJoin.ts';
+import type { Column } from '@csv-studio/core/engine/types.ts';
 import { Button } from '@/components/ui/button.tsx';
 import { cn } from '@/lib/utils.ts';
 

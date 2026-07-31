@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
-import type { AddConstantColumnParams } from '@/engine/operations/addConstantColumn.ts';
+import type { AddConstantColumnParams } from '@csv-studio/core/engine/operations/addConstantColumn.ts';
 
 export function AddConstantDialog({
   open,

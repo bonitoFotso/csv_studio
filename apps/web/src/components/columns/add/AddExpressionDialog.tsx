@@ -2,8 +2,8 @@ import * as React from 'react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
-import type { Column } from '@/engine/types.ts';
-import type { AddExpressionColumnParams, ExprNode } from '@/engine/operations/addExpressionColumn.ts';
+import type { Column } from '@csv-studio/core/engine/types.ts';
+import type { AddExpressionColumnParams, ExprNode } from '@csv-studio/core/engine/operations/addExpressionColumn.ts';
 
 type OperandType = 'column' | 'literal';
 

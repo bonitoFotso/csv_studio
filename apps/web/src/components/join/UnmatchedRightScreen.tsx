@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
-import type { Column, Row, RowId } from '@/engine/types.ts';
+import type { Column, Row, RowId } from '@csv-studio/core/engine/types.ts';
 import { cn } from '@/lib/utils.ts';
 
 const PAGE_SIZE = 30;

@@ -1,9 +1,9 @@
-import { registerAllOperations } from '@/engine/operations/index.ts';
-import { replay } from '@/engine/replay.ts';
-import { computeDuplicateGroups } from '@/engine/dedupe.ts';
-import { matchRowsExact } from '@/engine/join.ts';
-import { resolveFuzzyMatchesChunked } from '@/engine/fuzzyJoin.ts';
-import { CancelledError, type CancelToken } from '@/engine/asyncUtils.ts';
+import { registerAllOperations } from '@csv-studio/core/engine/operations/index.ts';
+import { replay } from '@csv-studio/core/engine/replay.ts';
+import { computeDuplicateGroups } from '@csv-studio/core/engine/dedupe.ts';
+import { matchRowsExact } from '@csv-studio/core/engine/join.ts';
+import { resolveFuzzyMatchesChunked } from '@csv-studio/core/engine/fuzzyJoin.ts';
+import { CancelledError, type CancelToken } from '@csv-studio/core/engine/asyncUtils.ts';
 import type { WorkerRequest, WorkerResponse } from './protocol.ts';
 
 registerAllOperations();

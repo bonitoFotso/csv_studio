@@ -1,5 +1,5 @@
-import type { ConditionOperator } from '@/engine/filterEngine.ts';
-import type { DetectedType } from '@/engine/profile.ts';
+import type { ConditionOperator } from '@csv-studio/core/engine/filterEngine.ts';
+import type { DetectedType } from '@csv-studio/core/engine/profile.ts';
 
 export const OPERATOR_LABEL: Record<ConditionOperator, string> = {
   eq: 'est égal à',

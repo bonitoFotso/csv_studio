@@ -3,12 +3,12 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { GroupEditor } from '@/components/filters/GroupEditor.tsx';
-import { evaluateGroup, type ConditionGroup } from '@/engine/filterEngine.ts';
-import { computeAllProfiles } from '@/engine/profile.ts';
-import { cloneTableWithRows } from '@/engine/table.ts';
-import { addStep, createOperation } from '@/engine/pipeline.ts';
-import type { FilterRowsParams } from '@/engine/operations/filterRows.ts';
-import type { Pipeline, Table as EngineTable } from '@/engine/types.ts';
+import { evaluateGroup, type ConditionGroup } from '@csv-studio/core/engine/filterEngine.ts';
+import { computeAllProfiles } from '@csv-studio/core/engine/profile.ts';
+import { cloneTableWithRows } from '@csv-studio/core/engine/table.ts';
+import { addStep, createOperation } from '@csv-studio/core/engine/pipeline.ts';
+import type { FilterRowsParams } from '@csv-studio/core/engine/operations/filterRows.ts';
+import type { Pipeline, Table as EngineTable } from '@csv-studio/core/engine/types.ts';
 import { useWorkspace } from '@/state/workspace.tsx';
 
 type FilterAction = 'keep' | 'delete' | 'extract_to_new_table';

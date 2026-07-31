@@ -3,11 +3,11 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
-import type { DedupMode } from '@/engine/dedupe.ts';
-import { addStep, createOperation } from '@/engine/pipeline.ts';
-import { cloneTableWithRows } from '@/engine/table.ts';
-import type { DeduplicateParams, DedupAction } from '@/engine/operations/deduplicate.ts';
-import type { ColumnId, Pipeline, Table as EngineTable } from '@/engine/types.ts';
+import type { DedupMode } from '@csv-studio/core/engine/dedupe.ts';
+import { addStep, createOperation } from '@csv-studio/core/engine/pipeline.ts';
+import { cloneTableWithRows } from '@csv-studio/core/engine/table.ts';
+import type { DeduplicateParams, DedupAction } from '@csv-studio/core/engine/operations/deduplicate.ts';
+import type { ColumnId, Pipeline, Table as EngineTable } from '@csv-studio/core/engine/types.ts';
 import { useWorkspace } from '@/state/workspace.tsx';
 import { useWorkerCall } from '@/hooks/useWorkerCall.ts';
 import { workerClient } from '@/worker/client.ts';

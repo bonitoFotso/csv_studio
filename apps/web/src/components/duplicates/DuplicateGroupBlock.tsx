@@ -1,7 +1,7 @@
-import { columnsThatDiffer } from '@/engine/dedupe.ts';
-import type { DuplicateGroup } from '@/engine/dedupe.ts';
-import type { Column } from '@/engine/types.ts';
-import type { DedupAction } from '@/engine/operations/deduplicate.ts';
+import { columnsThatDiffer } from '@csv-studio/core/engine/dedupe.ts';
+import type { DuplicateGroup } from '@csv-studio/core/engine/dedupe.ts';
+import type { Column } from '@csv-studio/core/engine/types.ts';
+import type { DedupAction } from '@csv-studio/core/engine/operations/deduplicate.ts';
 import { cn } from '@/lib/utils.ts';
 
 export const ACTION_LABEL: Record<DedupAction, string> = {

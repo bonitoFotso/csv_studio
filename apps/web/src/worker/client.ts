@@ -1,9 +1,9 @@
-import { createId } from '@/engine/ids.ts';
-import type { DedupMode, DuplicateGroup } from '@/engine/dedupe.ts';
-import type { KeyPair, MatchResult } from '@/engine/join.ts';
-import type { FuzzyMatchConfig, FuzzyResolution } from '@/engine/fuzzyJoin.ts';
-import type { ReplayOptions, ReplayResult } from '@/engine/replay.ts';
-import type { ColumnId, PipelineStep, Row, Table } from '@/engine/types.ts';
+import { createId } from '@csv-studio/core/engine/ids.ts';
+import type { DedupMode, DuplicateGroup } from '@csv-studio/core/engine/dedupe.ts';
+import type { KeyPair, MatchResult } from '@csv-studio/core/engine/join.ts';
+import type { FuzzyMatchConfig, FuzzyResolution } from '@csv-studio/core/engine/fuzzyJoin.ts';
+import type { ReplayOptions, ReplayResult } from '@csv-studio/core/engine/replay.ts';
+import type { ColumnId, PipelineStep, Row, Table } from '@csv-studio/core/engine/types.ts';
 import type { WorkerRequest, WorkerResponse } from './protocol.ts';
 
 let worker: Worker | null = null;

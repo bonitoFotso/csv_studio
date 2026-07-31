@@ -1,25 +1,25 @@
 // Livrable de la phase 4 : génère le jeu de données synthétique, l'applique à un petit pipeline
 // réaliste (dédoublonnage), calcule un ReportSpec de démonstration dessus, puis écrit dans
 // samples/ le CSV source, le ReportSpec JSON, et les deux PDF (brouillon + officiel). Exécuter
-// avec `bun run scripts/generateSamples.ts`.
+// avec `bun run apps/web/scripts/generateSamples.ts` (ou `bun run samples` depuis la racine).
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import Papa from 'papaparse';
 
-import { registerAllOperations } from '../src/engine/operations/index.ts';
-import { createTableFromRows } from '../src/engine/table.ts';
-import { createOperation, createPipeline, addStep } from '../src/engine/pipeline.ts';
-import { replay } from '../src/engine/replay.ts';
-import { validateReportSpec } from '../src/engine/reportSpecValidate.ts';
-import { computeReport } from '../src/engine/reportSpecCompute.ts';
-import type { DeduplicateParams } from '../src/engine/operations/deduplicate.ts';
+import { registerAllOperations } from '@csv-studio/core/engine/operations/index.ts';
+import { createTableFromRows } from '@csv-studio/core/engine/table.ts';
+import { createOperation, createPipeline, addStep } from '@csv-studio/core/engine/pipeline.ts';
+import { replay } from '@csv-studio/core/engine/replay.ts';
+import { validateReportSpec } from '@csv-studio/core/engine/reportSpecValidate.ts';
+import { computeReport } from '@csv-studio/core/engine/reportSpecCompute.ts';
+import type { DeduplicateParams } from '@csv-studio/core/engine/operations/deduplicate.ts';
 import { renderReportPdfToFile } from '../src/pdf/exportReportPdf.tsx';
 import { buildTraceability } from '../src/pdf/traceability.ts';
 import { generateSyntheticCandidates } from './generateSyntheticDataset.ts';
 
 registerAllOperations();
 
-const samplesDir = fileURLToPath(new URL('../samples/', import.meta.url));
+const samplesDir = fileURLToPath(new URL('../../../samples/', import.meta.url));
 mkdirSync(samplesDir, { recursive: true });
 
 // --- 1. Jeu de données synthétique ---------------------------------------------------------

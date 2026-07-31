@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { ChevronDown, Plus } from 'lucide-react';
-import { addStep, createOperation } from '@/engine/pipeline.ts';
-import type { Column, OperationType, Pipeline } from '@/engine/types.ts';
+import { addStep, createOperation } from '@csv-studio/core/engine/pipeline.ts';
+import type { Column, OperationType, Pipeline } from '@csv-studio/core/engine/types.ts';
 import { useWorkspace } from '@/state/workspace.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { AddConstantDialog } from '@/components/columns/add/AddConstantDialog.tsx';

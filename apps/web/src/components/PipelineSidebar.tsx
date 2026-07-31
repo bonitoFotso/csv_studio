@@ -1,11 +1,11 @@
 import { Undo2, Redo2, FileText } from 'lucide-react';
-import { canRedo, canUndo, moveCursor, redo, undo } from '@/engine/pipeline.ts';
-import type { OperationReport, Pipeline, Table } from '@/engine/types.ts';
+import { canRedo, canUndo, moveCursor, redo, undo } from '@csv-studio/core/engine/pipeline.ts';
+import type { OperationReport, Pipeline, Table } from '@csv-studio/core/engine/types.ts';
 import { useWorkspace } from '@/state/workspace.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import { operationLabel, buildPipelineReportText } from '@/lib/report.ts';
+import { operationLabel, buildPipelineReportText } from '@csv-studio/core/report.ts';
 import { downloadTextFile } from '@/lib/download.ts';
-import { suggestExportFilename } from '@/lib/csv.ts';
+import { suggestExportFilename } from '@csv-studio/core/csv.ts';
 import { cn } from '@/lib/utils.ts';
 
 export function PipelineSidebar({

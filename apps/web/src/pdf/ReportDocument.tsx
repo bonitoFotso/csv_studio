@@ -1,7 +1,7 @@
 import { Document, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import { ChartFigure } from './charts.tsx';
 import { REPORT_FONT_FAMILY } from './fonts.ts';
-import type { ComputedBlock, ComputedReport } from '../engine/reportSpecCompute.ts';
+import type { ComputedBlock, ComputedReport } from '@csv-studio/core/engine/reportSpecCompute.ts';
 import type { ReportTraceability } from './traceability.ts';
 
 export type ReportMode = 'draft' | 'official';

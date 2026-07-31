@@ -4,11 +4,11 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
-import type { KeyNormalization } from '@/engine/keyNormalize.ts';
-import { addStep, createOperation } from '@/engine/pipeline.ts';
-import { computeSummarizeTable } from '@/engine/operations/summarize.ts';
-import type { AggFn, AggregateSpec, BinningMode, GroupByColumn, SummarizeParams } from '@/engine/operations/summarize.ts';
-import type { ColumnId, Pipeline, Table as EngineTable } from '@/engine/types.ts';
+import type { KeyNormalization } from '@csv-studio/core/engine/keyNormalize.ts';
+import { addStep, createOperation } from '@csv-studio/core/engine/pipeline.ts';
+import { computeSummarizeTable } from '@csv-studio/core/engine/operations/summarize.ts';
+import type { AggFn, AggregateSpec, BinningMode, GroupByColumn, SummarizeParams } from '@csv-studio/core/engine/operations/summarize.ts';
+import type { ColumnId, Pipeline, Table as EngineTable } from '@csv-studio/core/engine/types.ts';
 import { useWorkspace } from '@/state/workspace.tsx';
 
 const NORMALIZATION_LABEL: Record<KeyNormalization, string> = { none: 'brute', text: 'texte', date: 'date' };

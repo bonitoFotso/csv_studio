@@ -1,4 +1,4 @@
-import type { Column, ColumnId } from '@/engine/types.ts';
+import type { Column, ColumnId } from '@csv-studio/core/engine/types.ts';
 
 /**
  * Reconstruit l'ordre complet des colonnes après un glisser-déposer qui n'a réordonné

@@ -2,8 +2,8 @@ import * as React from 'react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
-import type { Column } from '@/engine/types.ts';
-import type { AddExtractColumnParams, ExtractMode } from '@/engine/operations/addExtractColumn.ts';
+import type { Column } from '@csv-studio/core/engine/types.ts';
+import type { AddExtractColumnParams, ExtractMode } from '@csv-studio/core/engine/operations/addExtractColumn.ts';
 
 const MODES: { value: ExtractMode; label: string; needsArg: boolean; argPlaceholder?: string }[] = [
   { value: 'year', label: 'Année (depuis une date)', needsArg: false },

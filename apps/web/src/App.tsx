@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Copy, Download, Filter, FolderOpen, Link2, ListPlus, Save, Sigma } from 'lucide-react';
-import { addStep, createOperation } from '@/engine/pipeline.ts';
-import type { ReorderColumnsParams } from '@/engine/operations/reorderColumns.ts';
+import { addStep, createOperation } from '@csv-studio/core/engine/pipeline.ts';
+import type { ReorderColumnsParams } from '@csv-studio/core/engine/operations/reorderColumns.ts';
 import { mergeVisibleReorder } from '@/lib/columnOrder.ts';
 import { WorkspaceProvider, useActiveTable, useWorkspace } from '@/state/workspace.tsx';
 import { TableTabs } from '@/components/TableTabs.tsx';

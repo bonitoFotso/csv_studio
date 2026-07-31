@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { addStep, createOperation } from '@/engine/pipeline.ts';
-import { suggestColumnMapping } from '@/engine/recipe.ts';
-import type { AppendRowsParams } from '@/engine/operations/appendRows.ts';
-import type { ColumnMapping, Pipeline, Table as EngineTable } from '@/engine/types.ts';
+import { addStep, createOperation } from '@csv-studio/core/engine/pipeline.ts';
+import { suggestColumnMapping } from '@csv-studio/core/engine/recipe.ts';
+import type { AppendRowsParams } from '@csv-studio/core/engine/operations/appendRows.ts';
+import type { ColumnMapping, Pipeline, Table as EngineTable } from '@csv-studio/core/engine/types.ts';
 import { useWorkspace } from '@/state/workspace.tsx';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog.tsx';
 import { Button } from '@/components/ui/button.tsx';

@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { UploadCloud } from 'lucide-react';
 import { parseCsvFile } from '@/lib/csv.ts';
-import { createTableFromRows } from '@/engine/table.ts';
-import type { Table } from '@/engine/types.ts';
+import { createTableFromRows } from '@csv-studio/core/engine/table.ts';
+import type { Table } from '@csv-studio/core/engine/types.ts';
 import { Button } from '@/components/ui/button.tsx';
 
 export function MiniFileImport({ label, onLoaded }: { label: string; onLoaded: (table: Table) => void }) {

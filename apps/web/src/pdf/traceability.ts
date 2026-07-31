@@ -1,5 +1,5 @@
-import { operationLabel } from '../lib/report.ts';
-import type { OperationReport, Pipeline, Table } from '../engine/types.ts';
+import { operationLabel } from '@csv-studio/core/report.ts';
+import type { OperationReport, Pipeline, Table } from '@csv-studio/core/engine/types.ts';
 
 export interface TraceabilitySourceFile {
   name: string;

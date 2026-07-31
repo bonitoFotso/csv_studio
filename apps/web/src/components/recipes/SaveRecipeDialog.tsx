@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { buildRecipe } from '@/engine/recipe.ts';
-import type { Table } from '@/engine/types.ts';
+import { buildRecipe } from '@csv-studio/core/engine/recipe.ts';
+import type { Table } from '@csv-studio/core/engine/types.ts';
 import type { WorkspaceEntry } from '@/state/workspace.tsx';
 import { saveRecipe } from '@/persistence/db.ts';
 import { downloadTextFile } from '@/lib/download.ts';

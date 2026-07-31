@@ -3,8 +3,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
-import type { Column } from '@/engine/types.ts';
-import type { AddConcatColumnParams } from '@/engine/operations/addConcatColumn.ts';
+import type { Column } from '@csv-studio/core/engine/types.ts';
+import type { AddConcatColumnParams } from '@csv-studio/core/engine/operations/addConcatColumn.ts';
 
 export function AddConcatDialog({
   open,

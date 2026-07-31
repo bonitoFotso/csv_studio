@@ -1,7 +1,7 @@
 import { Trash2 } from 'lucide-react';
-import type { Condition, ConditionOperator } from '@/engine/filterEngine.ts';
-import type { Column, ColumnId } from '@/engine/types.ts';
-import type { DetectedType } from '@/engine/profile.ts';
+import type { Condition, ConditionOperator } from '@csv-studio/core/engine/filterEngine.ts';
+import type { Column, ColumnId } from '@csv-studio/core/engine/types.ts';
+import type { DetectedType } from '@csv-studio/core/engine/profile.ts';
 import { Input } from '@/components/ui/input.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { needsList, needsRange, needsValue, operatorsForType, OPERATOR_LABEL } from '@/components/filters/operatorOptions.ts';

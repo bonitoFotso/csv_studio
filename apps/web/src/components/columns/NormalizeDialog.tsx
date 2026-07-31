@@ -3,9 +3,9 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
-import type { Column, ColumnId } from '@/engine/types.ts';
-import type { NormalizeColumnsParams } from '@/engine/operations/normalizeColumns.ts';
-import type { NormalizeStep } from '@/engine/normalize.ts';
+import type { Column, ColumnId } from '@csv-studio/core/engine/types.ts';
+import type { NormalizeColumnsParams } from '@csv-studio/core/engine/operations/normalizeColumns.ts';
+import type { NormalizeStep } from '@csv-studio/core/engine/normalize.ts';
 
 type CaseOption = 'none' | 'upper' | 'lower' | 'title';
 

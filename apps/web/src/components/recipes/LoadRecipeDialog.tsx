@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { FileJson, Trash2 } from 'lucide-react';
-import { instantiateRecipe, mappingIsComplete, suggestColumnMapping, type SecondaryInput } from '@/engine/recipe.ts';
-import type { ColumnMapping, Recipe, Table } from '@/engine/types.ts';
+import { instantiateRecipe, mappingIsComplete, suggestColumnMapping, type SecondaryInput } from '@csv-studio/core/engine/recipe.ts';
+import type { ColumnMapping, Recipe, Table } from '@csv-studio/core/engine/types.ts';
 import type { WorkspaceEntry } from '@/state/workspace.tsx';
 import { useWorkspace } from '@/state/workspace.tsx';
 import { deleteRecipe, listRecipes, type StoredRecipe } from '@/persistence/db.ts';

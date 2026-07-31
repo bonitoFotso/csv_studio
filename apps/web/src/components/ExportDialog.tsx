@@ -3,9 +3,9 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
-import { suggestExportFilename, tableToCsvString } from '@/lib/csv.ts';
+import { suggestExportFilename, tableToCsvString } from '@csv-studio/core/csv.ts';
 import { downloadTextFile } from '@/lib/download.ts';
-import type { Table as EngineTable } from '@/engine/types.ts';
+import type { Table as EngineTable } from '@csv-studio/core/engine/types.ts';
 
 const DELIMITERS = [
   { label: 'Virgule (,)', value: ',' },

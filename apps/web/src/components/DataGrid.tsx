@@ -2,7 +2,7 @@ import * as React from 'react';
 import { GripVertical } from 'lucide-react';
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import type { ColumnId, Row, Table as EngineTable } from '@/engine/types.ts';
+import type { ColumnId, Row, Table as EngineTable } from '@csv-studio/core/engine/types.ts';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
 import { cn } from '@/lib/utils.ts';
 

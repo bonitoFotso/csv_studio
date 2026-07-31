@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
-import type { AddSequenceColumnParams } from '@/engine/operations/addSequenceColumn.ts';
+import type { AddSequenceColumnParams } from '@csv-studio/core/engine/operations/addSequenceColumn.ts';
 
 export function AddSequenceDialog({
   open,

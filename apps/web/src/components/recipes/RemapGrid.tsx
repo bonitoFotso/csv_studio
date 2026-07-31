@@ -1,4 +1,4 @@
-import type { ColumnMapping } from '@/engine/types.ts';
+import type { ColumnMapping } from '@csv-studio/core/engine/types.ts';
 
 export function RemapGrid({
   expectedColumns,

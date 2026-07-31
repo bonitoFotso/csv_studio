@@ -1,7 +1,7 @@
 import { Plus, Trash2 } from 'lucide-react';
-import type { Condition, ConditionGroup } from '@/engine/filterEngine.ts';
-import type { Column, ColumnId } from '@/engine/types.ts';
-import type { DetectedType } from '@/engine/profile.ts';
+import type { Condition, ConditionGroup } from '@csv-studio/core/engine/filterEngine.ts';
+import type { Column, ColumnId } from '@csv-studio/core/engine/types.ts';
+import type { DetectedType } from '@csv-studio/core/engine/profile.ts';
 import { Button } from '@/components/ui/button.tsx';
 import { ConditionRow } from '@/components/filters/ConditionRow.tsx';
 
