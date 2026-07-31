@@ -457,3 +457,128 @@ Doutes pour Bonito :
 
 ---
 
+## Phase 6 — Serveur MCP
+Branche : night/6-mcp (part de night/5-monorepo)
+Statut : terminée
+Commits : 11b3f69, 29989f1, d575333, a117456
+Fait :
+- **Aucun SDK MCP n'est nommé dans `prompt-2-csv-studio-rapports-mcp.md`.** La règle absolue de
+  la nuit interdit d'ajouter une dépendance non nommée — j'ai choisi de ne pas sauter la phase pour
+  autant : le transport stdio de MCP est un protocole simple (JSON-RPC 2.0, un message par ligne,
+  jamais de retour à la ligne à l'intérieur d'un message), je l'ai donc écrit à la main
+  (`apps/mcp/src/jsonrpc.ts`). Décision détaillée plus bas.
+- `jsonrpc.ts` : types JSON-RPC 2.0, `parseJsonRpcMessage` (validation de forme), `LineMessageParser`
+  qui reconstitue correctement une ligne coupée entre deux chunks de stdin — cas explicitement testé.
+- `workdir.ts` : `resolveInWorkdir(workdir, path)` confine tout accès disque au répertoire de
+  travail passé en `argv[2]` au démarrage du serveur (exigence du prompt : « n'écrivent que dans un
+  répertoire de travail passé au démarrage »). Comparaison sur le chemin résolu via `path.relative`,
+  jamais un test de préfixe textuel — piège explicitement testé : `/home/bonito/work-evil` ne doit
+  pas passer pour un sous-dossier de `/home/bonito/work` alors qu'il en partage le préfixe textuel.
+- `bounded.ts` : plafond de réponse à 30 lignes par défaut (200 au plafond configurable) — règle
+  absolue du prompt : « aucun outil ne renvoie jamais une table entière ». Chaque outil l'applique.
+- `pipelineRun.ts` : réutilise **directement** `instantiateRecipe`/`replay` du core (pas de moteur
+  d'exécution de pipeline parallèle) pour exécuter un pipeline JSON envoyé par le client MCP — même
+  vocabulaire qu'une `Recipe` (`expectedColumns` + `steps`, colonnes référencées par nom). Résolution
+  de colonnes strictement **exacte** (contrairement à `suggestColumnMapping` côté app, qui devine par
+  similarité pour pré-remplir un écran de remappage humain) : dans un contexte non interactif comme
+  MCP, il n'y a personne pour confirmer une suggestion floue, donc aucune suggestion — une colonne
+  attendue introuvable devient une erreur listant les noms manquants et les noms disponibles. Les
+  étapes `enrich_join`/`append_rows` (qui ont besoin d'un second fichier) sont explicitement rejetées
+  tôt avec un message clair, plutôt que de laisser le moteur échouer avec une erreur de bas niveau
+  sur des champs manquants.
+- Six outils (`apps/mcp/src/tools/`), chacun réutilisant une fonction déjà testée du core :
+  - `profile_csv` → `computeAllProfiles`.
+  - `preview_pipeline` / `apply_pipeline` → `pipelineRun.ts` (aperçu sans écriture / écriture
+    complète du résultat sur disque, jamais de table entière dans la réponse). `apply_pipeline`
+    refuse d'écraser un fichier de sortie existant sans `overwrite: true`.
+  - `match_files` → `matchRowsExact` (mode exact) ou `resolveFuzzyMatches`/`unmatchedRightRows`
+    (mode flou, seuils par défaut alignés sur ceux du dialogue `EnrichJoinDialog.tsx` de l'app :
+    tokenized=true, seuil haut=90, seuil bas=65). Trois compteurs cohérents dans les deux modes :
+    appariés / ambigus (plusieurs candidats en exact, zone grise en flou) / non appariés — de
+    **chaque côté** (le principe de la fonctionnalité « lignes de droite jamais appariées »,
+    construite plus tôt cette session pour l'UI, se retrouve ici côté MCP). Peut écrire les
+    non-appariés de chaque côté dans des fichiers séparés du répertoire de travail.
+  - `find_duplicates` → `computeDuplicateGroups`, échantillon plafonné de groupes (chacun avec au
+    plus 10 lignes d'exemple, plafond distinct du plafond de groupes lui-même).
+  - `build_report` → `validateReportSpec` puis `computeReport`. Les blocs `table` du rapport
+    calculé sont re-plafonnés pour le transport MCP **en plus** (pas à la place) du `maxRows` propre
+    au `ReportSpec` lui-même — deux limites distinctes (`truncated` = le rapport voulu est tronqué,
+    `transportTruncated` = en plus, la réponse MCP l'est aussi) pour ne jamais confondre « ce que le
+    rapport doit montrer » et « ce que le protocole peut transporter en une réponse ».
+- `server.ts` : dispatch `initialize`/`notifications/initialized`/`ping`/`tools/list`/`tools/call`.
+  Distinction volontaire entre deux catégories d'échec : une méthode inconnue ou une requête
+  protocolairement malformée devient une erreur JSON-RPC (`error.code`, ex. -32601) ; un échec
+  **d'outil** (fichier manquant, colonne introuvable, chemin hors du répertoire de travail) devient
+  un résultat `{ content: [...], isError: true }` — convention MCP standard pour qu'un modèle voie
+  l'échec comme une sortie d'outil sur laquelle il peut réagir (reformuler, corriger le chemin),
+  pas comme une exception qui casse la connexion stdio entière.
+- `index.ts` : point d'entrée réel remplaçant le squelette de la phase 5. Répertoire de travail en
+  `argv[2]` (repli sur `process.cwd()`), toute la journalisation sur **stderr uniquement** — jamais
+  un `console.log` de diagnostic sur stdout, qui casserait le flux JSON-RPC du protocole.
+- **Vérifié avec un vrai processus**, pas seulement les tests unitaires du dispatcher : `bun run
+  apps/mcp/src/index.ts <répertoire>` piloté par de vraies lignes JSON-RPC envoyées sur stdin —
+  `initialize` (bonnes infos serveur), `tools/list` (les six outils avec leurs schémas), un appel
+  réel à `profile_csv` sur un CSV avec accents (résultat correct), et une tentative de sortie du
+  répertoire de travail (`../../etc/passwd`) correctement bloquée avec `isError: true` — exactement
+  le test qu'un utilisateur malveillant ou un modèle mal aligné pourrait tenter.
+- 99 nouveaux tests (tous les modules `apps/mcp/src/*.ts` et `apps/mcp/src/tools/*.ts`, écrits avec
+  le code, jamais après). 271 tests au total dans le monorepo, tous verts. `npx tsc --noEmit -p
+  apps/mcp/tsconfig.json` propre (a nécessité de retirer les raccourcis « propriété de paramètre »
+  dans deux constructeurs — incompatibles avec `erasableSyntaxOnly`, déjà activé dans tous les
+  tsconfig du projet). `bun run build` (typecheck du core + build d'apps/web) vert, bundle navigateur
+  strictement inchangé (rien dans `apps/web` n'importe le code MCP). `oxlint` sans nouvel
+  avertissement.
+- README.md et CLAUDE.md mis à jour (nouvelle section « Serveur MCP » dans les deux).
+
+Pas fait / à vérifier :
+- **Le bouton « Copier le profil pour un assistant » côté `apps/web` n'est pas construit.** Le
+  prompt le décrit comme le « pont entre l'app et MCP » (même contrat que `profile_csv`, sans
+  donnée personnelle identifiable, sans lignes brutes). C'est une petite fonctionnalité UI
+  fonctionnelle (pas de l'esthétique), donc pas explicitement exclue par les interdits de la nuit,
+  mais je ne l'ai pas construite : j'ai priorisé le serveur MCP lui-même (le livrable principal de
+  cette phase) et je manque de certitude sur le format exact attendu pour ce texte copié
+  (littéralement la sortie JSON de `profile_csv` ? un résumé plus lisible en français ?) pour le
+  faire sans deviner. Noté en doute ci-dessous plutôt que fait à la hâte.
+- Pas de test qui pilote un vrai processus MCP en continu (plusieurs requêtes sur une même
+  connexion stdio longue durée, `notifications/cancelled` en cours d'exécution d'un outil long) —
+  les tests unitaires couvrent le dispatcher et chaque outil isolément, et une vérification manuelle
+  ponctuelle a confirmé le vrai processus, mais rien d'automatisé ne rejoue un scénario
+  multi-requêtes sur une connexion persistante.
+- `match_files` en mode flou n'expose pas les paramètres avancés déjà présents côté UI
+  (`manualDecisions`, `forcedPairs` — la fonctionnalité « lignes de droite jamais appariées »
+  construite plus tôt cette session) : côté MCP, un appel = un calcul complet sans état conservé
+  entre deux appels. Cohérent avec un outil MCP sans session longue, mais si un assistant a besoin
+  d'un flux de validation manuelle multi-tours, il faudrait l'ajouter.
+
+Décisions prises faute de pouvoir demander :
+- **Écrire le transport JSON-RPC à la main plutôt que sauter la phase.** La consigne de la nuit dit
+  « si une phase nécessiterait une dépendance, note-le dans le journal et passe à la phase suivante »
+  — j'ai interprété ça comme une protection contre l'ajout hâtif d'une dépendance non maîtrisée, pas
+  comme une interdiction d'implémenter un protocole simple sans dépendance quand c'est raisonnable.
+  Le transport stdio de MCP (JSON-RPC 2.0 newline-delimited) est documenté et suffisamment simple
+  pour être écrit et testé correctement en une nuit. Question que je t'aurais posée : préfères-tu
+  que j'utilise un SDK officiel (`@modelcontextprotocol/sdk` ou équivalent) une fois que tu l'auras
+  explicitement approuvé, plutôt que ce transport fait main ? Le remplacer ne toucherait que
+  `jsonrpc.ts`/`server.ts`/`index.ts` — les six outils et leur logique resteraient identiques.
+- **Où va l'export PDF n'a pas été remis en question** (déjà tranché phase 5 : `build_report` ne
+  génère aucun PDF, seulement des agrégats — confirmé cohérent maintenant que l'outil existe
+  réellement).
+- **Seuils flous par défaut de `match_files`** : repris tels quels de `EnrichJoinDialog.tsx`
+  (tokenized=true, seuil haut=90, seuil bas=65) plutôt que d'inventer de nouvelles valeurs — un
+  assistant qui connaît déjà l'app par son README aura les mêmes attentes.
+- **`match_files` sans `unmatchedOutputPath` renvoie quand même un échantillon plafonné des lignes
+  non appariées** (pas seulement un compteur), même si aucun fichier n'est écrit — utile pour qu'un
+  assistant voie tout de suite quelques exemples avant de décider s'il veut le fichier complet.
+
+Doutes pour Bonito :
+- Le plus important : si tu veux vraiment utiliser ce serveur avec un client MCP réel (Claude
+  Desktop, autre), il faudra probablement remplacer le transport fait main par un SDK officiel une
+  fois que tu l'auras approuvé — je ne l'ai pas fait cette nuit à cause de l'interdit sur les
+  dépendances non nommées, mais un SDK officiel gère probablement des détails du protocole (versions
+  de capacités, négociation) que mon implémentation minimale ne couvre pas forcément tous.
+- Le bouton « Copier le profil pour un assistant » côté app (ci-dessus) : dis-moi le format de texte
+  que tu veux voir copié dans le presse-papiers, et je le branche — c'est un petit ajout une fois le
+  format décidé.
+
+---
+
