@@ -35,8 +35,11 @@ passé au démarrage.
 bun run apps/mcp/src/index.ts /chemin/vers/le/répertoire/de/travail
 ```
 
-Pas encore fait : le bouton « Copier le profil pour un assistant » dans l'app (pont app ↔ MCP
-décrit dans le prompt de conception) n'est pas construit — voir `NIGHT_LOG.md`, phase 6.
+Le pont app ↔ MCP décrit dans le prompt de conception est construit : le bouton « Copier pour un
+assistant » de l'app (voir plus bas) copie un profil de colonnes dans le même esprit que
+`profile_csv`, mais enrichi d'un échantillon de lignes anonymisé et du format `ReportSpec` attendu
+— un assistant qui n'a pas accès au serveur MCP peut quand même écrire un `ReportSpec` valide à
+partir de ce seul texte collé.
 
 ## État actuel
 
@@ -51,6 +54,13 @@ décrit dans le prompt de conception) n'est pas construit — voir `NIGHT_LOG.md
 - **Résumer (agrégation / tableau croisé)** (bouton « Résumer ») : opération `summarize` qui produit une table dérivée à une granularité différente — regroupement sur une ou plusieurs colonnes (chacune avec sa propre normalisation brute/texte/date), agrégats (`count`, `countDistinct`, `countNonEmpty`, `sum`, `avg`, `min`, `max`, `median`, `first`, `concat`), et binning numérique en tranches (largeur fixe, nombre de tranches, ou bornes explicites) — les tranches vides restent visibles avec un compte de zéro et gardent leur ordre naturel. Parsing de nombre tolérant à la virgule décimale française et aux espaces de milliers (normal, insécable, fine insécable) ; une cellule vide est exclue d'une moyenne, jamais comptée comme zéro. Comme toute autre étape, c'est rejouable/désactivable/annulable et calculé dans le Worker.
 - **Format `ReportSpec` (moteur seulement, pas encore d'UI)** : `packages/core/src/engine/reportSpec.ts` définit un format de rapport JSON portable, sœur de `Recipe` — mêmes principes (colonnes référencées par nom, `expectedColumns`, remappage obligatoire pré-rempli par similarité). Cinq types de blocs : `text`, `kpi_row`, `chart` (barres verticales/horizontales, barres empilées, lignes, secteurs/anneau, histogramme — le champ `summarize` d'un bloc `chart` est passé tel quel à l'opération `summarize`, aucun recalcul séparé), `table` (avec filtre et troncature `maxRows`), `page_break`. `validateReportSpec` collecte toutes les erreurs d'un document malformé en un seul passage, avec un chemin JSON précis par erreur (ex. `blocks[2].summarize.groupBy[0].column`) plutôt qu'un échec silencieux.
 - **Export PDF (bouton « Rapport PDF »)** : colle ou importe un `ReportSpec` JSON (voir plus bas), mappe ses colonnes attendues sur la table active (même écran de remappage que les recettes), choisis le mode, télécharge le PDF. Rendu vectoriel réel (texte sélectionnable, pas de capture d'écran) via `@react-pdf/renderer`, graphiques dessinés avec `d3-scale`/`d3-shape` dans une couche géométrique commune sans DOM (`reportGeometry.ts`) — un futur aperçu écran consommerait cette même couche. Police Liberation Sans embarquée en local (aucune requête vers un tiers — le seul fetch est le chargement de cette police, strictement same-origin, depuis le bundle de l'app lui-même), séries de graphique distinguables imprimées en noir et blanc. Deux modes : **brouillon** (filigrane, bloc de traçabilité complet — fichiers sources, recette, étapes du pipeline avec comptes d'entrée/sortie, appariements auto/manuels, non-appariés) et **officiel** (en-tête avec nom de structure, pagination réelle, traçabilité condensée en pied de page). Les deux modes produisent strictement les mêmes chiffres, seule la présentation change. L'éditeur de rapport WYSIWYG (glisser-déposer des blocs, ajouter un graphique depuis l'UI) reste hors périmètre — le `ReportSpec` s'écrit à la main ou se génère via un assistant (le serveur MCP, `build_report`/`profile_csv`).
+- **Copier pour un assistant (bouton « Copier pour un assistant »)** : copie dans le presse-papiers
+  un texte Markdown pensé pour être collé à un assistant IA qui doit écrire un `ReportSpec` — le
+  profil de chaque colonne (nom, type détecté, taux de remplissage, nombre de valeurs distinctes,
+  types d'anomalie sans les exemples réels), un échantillon de 3 lignes **anonymisées** (le contenu
+  est fictif mais la forme est fidèle : même longueur de texte, même séparateur décimal, même
+  format de date exact — `anonymize.ts`, testé), et un rappel condensé du format `ReportSpec`
+  (`REPORT_SPEC_FORMAT_GUIDE`). Aucune valeur réelle de la table n'y figure jamais.
 - **Livrables de démonstration (`samples/`)** : générés par `bun run samples` (`apps/web/scripts/generateSamples.ts`) — un jeu de données synthétique reproductible de 500 candidats (`candidats-session-juillet-2026.csv`, avec accents, valeurs manquantes, doublons volontaires exacts et quasi-exacts), passé par un vrai pipeline de dédoublonnage puis résumé par un `ReportSpec` de démonstration à 7 blocs (`report-spec.json`), exporté en `rapport-brouillon.pdf` et `rapport-officiel.pdf`. Ces fichiers illustrent bout en bout la chaîne CSV → pipeline → ReportSpec → PDF sur un cas réaliste, pas un exemple jouet. Les deux PDF embarquent un horodatage réel, donc les régénérer change toujours leurs octets même sans changement de comportement ; le CSV et le JSON, eux, sont strictement reproductibles (graine fixe).
 - **Pas encore fait** : export XLSX (CSV uniquement pour l'instant, par choix explicite), éditeur de rapport WYSIWYG (le `ReportSpec` s'importe en JSON, aucune UI de construction visuelle de blocs).
 
