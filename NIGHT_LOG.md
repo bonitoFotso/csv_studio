@@ -1,8 +1,54 @@
 # Journal de session autonome — NIGHT_RUN
 
-## Résumé (à compléter en fin de session)
+## Résumé de fin de session
 
-_En cours…_
+Les 8 phases prévues par `prompt-2-csv-studio-rapports-mcp.md` (réordonnées et renumérotées pour
+cette nuit) ont toutes été menées à leur terme, chacune sur sa propre branche, **aucune fusionnée
+dans `main`**. `main` ne porte que ce journal. Relire les branches dans l'ordre ci-dessous : chaque
+phase dépend du code de la précédente (voir « Décisions prises » de la phase 2 pour la justification
+de ce choix de branchement, différent de la consigne littérale « toujours repartir de main »).
+
+| # | Branche | Statut | Contenu |
+|---|---|---|---|
+| 1 | `night/1-aggregation` | terminée | Opération `summarize` (regroupement, agrégats, binning), parsing de nombre tolérant |
+| 2 | `night/2-reportspec` | terminée | Types/validation/calcul de `ReportSpec`, aucune UI (comme demandé) |
+| 3 | `night/3-pdf` | terminée | Export PDF vectoriel (`@react-pdf/renderer`), géométrie de graphiques sans DOM, police locale |
+| 4 | `night/4-samples` | terminée | **Livrables de démonstration** — `samples/*.csv`, `*.json`, `*.pdf` (le plus important à ouvrir) |
+| 5 | `night/5-monorepo` | terminée* | `packages/core` + `apps/web` + `apps/mcp` (squelette), workspaces Bun |
+| 6 | `night/6-mcp` | terminée | Serveur MCP stdio, six outils, transport JSON-RPC écrit à la main |
+| 7 | `night/7-performance` | terminée | Écritures Dexie débouncées/différentielles (mesuré : -97 %) ; 2 items tentés/sans objet, documentés |
+| 8 | `night/8-deploy` | terminée | `wrangler.toml` + `_headers` (CSP stricte) — **jamais exécutés ni appliqués** |
+
+`*` phase 5 : le premier commit de cette branche (`439a288`), pris isolément, ne compile pas — un
+artefact de la façon dont `git mv` indexe le contenu au moment du déplacement, pas une régression.
+L'état de la branche après son dernier commit est vérifié vert. Détail dans l'entrée de la phase.
+
+**À faire en priorité à ton réveil**, par ordre d'impact décroissant :
+1. Ouvrir `samples/rapport-brouillon.pdf` et `samples/rapport-officiel.pdf` — rien construit dans
+   les phases 1 à 3 (agrégation, `ReportSpec`, rendu PDF) n'a été vu par un œil humain avant cette
+   nuit. C'est le seul moyen de juger si le résultat est satisfaisant avant d'aller plus loin.
+2. Trancher la question police (phase 3, Liberation Sans copiée localement, licence SIL OFL) et le
+   vocabulaire JSON du `ReportSpec` (phase 2, `"column"`/`"raw"` calqués sur l'exemple du prompt) —
+   les deux figent des choix plus coûteux à changer une fois qu'un bouton d'export existera dans l'UI.
+3. Si tu veux utiliser le serveur MCP avec un vrai client (Claude Desktop, autre) : remplacer le
+   transport JSON-RPC fait main par un SDK officiel une fois que tu l'auras approuvé (phase 6,
+   aucune dépendance MCP n'était nommée dans le prompt, donc aucune n'a été ajoutée cette nuit).
+4. Avant tout déploiement réel : faire valider `wrangler.toml`/`_headers` par `wrangler` lui-même
+   et tester la CSP dans un vrai navigateur (phase 8, rien de tout ça n'a été exécuté cette nuit).
+5. Le bouton « Copier le profil pour un assistant » côté app (pont app ↔ MCP décrit dans le
+   prompt) n'a pas été construit (phase 6) — dis le format de texte voulu et c'est un petit ajout.
+
+**Explicitement pas commencé, par exclusion assumée du périmètre de la nuit** (jamais par oubli) :
+éditeur de rapport WYSIWYG, glisser-déposer de blocs, ajout de graphique depuis l'UI, tout travail
+esthétique/de polish visuel, table résidant dans le Worker, stockage colonnaire dans `packages/core`.
+Chacun de ces points est noté « trop invasif pour un travail sans supervision » dans l'entrée de
+phase correspondante, avec la raison précise.
+
+**Aucune règle absolue de la nuit n'a été enfreinte** : aucun `git push`, aucun `git reset --hard`
+ni réécriture d'historique, aucune dépendance ajoutée sans être nommée dans le prompt (le transport
+MCP a été écrit à la main précisément pour cette raison), aucune requête réseau ajoutée au code de
+l'app, aucune commande de déploiement exécutée, aucun appel au MCP Cloudflare, aucun test désactivé
+ou affaibli pour le faire passer.
 
 ---
 
@@ -687,6 +733,92 @@ Doutes pour Bonito :
   (nombre d'appels, volume sérialisé). Si tu veux un profil plus large (temps de rendu de la
   grille, temps de rejeu du pipeline sur un vrai fichier de 50 000 lignes dans un vrai navigateur),
   ce sera à faire avec toi, avec de vrais outils de profilage ouverts pendant l'usage.
+
+---
+
+## Phase 8 — Préparation au déploiement (fichiers, jamais appliqués)
+Branche : night/8-deploy (part de night/7-performance)
+Statut : terminée
+Commits : d8aea54, cd2c4d5
+Fait :
+- `apps/web/wrangler.toml` : bloc `[assets]` pointant vers `./dist` (le build de production
+  d'`apps/web`), `not_found_handling = "single-page-application"` pour le repli SPA demandé.
+- `apps/web/public/_headers` (copié tel quel dans `dist/` par Vite, à la racine du répertoire
+  servi — vérifié après un vrai `bun run build`) :
+  - Cache immuable (`max-age=31536000, immutable`) sur `/assets/*` — les noms de fichiers de Vite
+    incluent un hash de contenu, donc un cache infini est sans risque.
+  - `Cache-Control: no-cache` sur `/index.html`, pour qu'un nouveau déploiement soit visible
+    immédiatement plutôt que de servir une page qui référence des assets hashés déjà remplacés.
+  - CSP stricte sur `/*`. Avant de l'écrire, vérifié par recherche exhaustive dans le code (pas
+    seulement supposé) :
+    - Aucun `eval()`/`new Function` nulle part dans le projet (le commentaire de
+      `addExpressionColumn.ts` le confirme explicitement : arbre d'expression restreint, jamais
+      d'`eval()` de texte libre) → `script-src 'self'` sans `'unsafe-eval'`.
+    - Plusieurs composants (`DataGrid.tsx`, `ColumnProfilePanel.tsx`, `busy-indicator.tsx`) posent
+      une largeur en style React inline (`style={{ width: ... }}`, colonnes redimensionnables et
+      barres de progression) → `style-src` a besoin de `'unsafe-inline'`, sans quoi ces éléments
+      perdraient leur mise en forme dynamique une fois la CSP appliquée.
+    - L'app instancie un Web Worker (`new Worker(url, { type: 'module' })` dans `worker/client.ts`)
+      dont dépend tout le rejeu de pipeline sans geler l'UI → `worker-src 'self'` explicite, pour
+      ne pas compter sur un repli de navigateur non garanti (CSP3 traite `worker-src` comme une
+      directive à part, plus de repli fiable vers `script-src`/`child-src` selon les navigateurs).
+    - `connect-src 'none'` — confirme la promesse centrale du projet (aucune requête réseau) au
+      niveau du navigateur lui-même, pas seulement par convention de code.
+    - `object-src 'none'`, `base-uri 'none'`, `form-action 'none'` (aucun `<form>` dans le
+      projet — vérifié), `frame-ancestors 'none'` : durcissement standard sans risque de casser
+      quoi que ce soit dans cette app.
+  - Aussi ajouté `X-Content-Type-Options: nosniff` et `Referrer-Policy: same-origin`, non demandés
+    explicitement mais cohérents avec l'esprit « CSP stricte » de la consigne et sans risque de
+    régression pour cette app.
+- **Rien exécuté** : aucune commande `wrangler` lancée, aucun appel au MCP Cloudflare (ni pour lire
+  ni pour écrire), aucun déploiement — conformément à l'interdit absolu de la nuit. Vérifié après
+  écriture que `bun run build` copie bien `_headers` dans `apps/web/dist/` (fichier statique de
+  `public/`, inchangé par le build), sans quoi le fichier existerait mais ne servirait à rien une
+  fois réellement déployé.
+- `bun run test` (278 tests, inchangé — ces fichiers ne sont pas du code TypeScript, rien à
+  typechecker ni tester), `bun run build` vert, `bun run lint` sans nouvel avertissement.
+- README.md (nouvelle section « Déploiement ») et CLAUDE.md (nouvelle section + entrée dans le
+  diagramme de structure) mis à jour.
+
+Pas fait / à vérifier :
+- **Aucune validation par l'outil `wrangler` lui-même** (ex. `wrangler deploy --dry-run` ou
+  équivalent) — interdit par les règles de la nuit (ne jamais exécuter de commande de déploiement).
+  Le TOML et le format `_headers` sont écrits d'après ma connaissance de leur syntaxe documentée,
+  mais n'ont pas été vérifiés par l'outil qui les consommera réellement. **Priorité avant tout
+  déploiement réel** : lancer `wrangler` toi-même (ou avec moi, en session supervisée) sur ces
+  fichiers avant de les utiliser pour de vrai.
+- Pas de fichier `robots.txt`/`sitemap.xml` ni de configuration de domaine personnalisé — hors
+  périmètre de ce que le prompt demandait (uniquement `wrangler.toml` + `_headers`).
+
+Décisions prises faute de pouvoir demander :
+- **CSP `style-src 'unsafe-inline'` plutôt qu'une CSP sans `unsafe-inline`.** Une CSP "parfaite"
+  éviterait tout `'unsafe-inline'`, mais cette app utilise légitimement des largeurs dynamiques en
+  style React inline (barres de progression à pourcentage variable, colonnes de grille
+  redimensionnables par l'utilisateur) — les remplacer par des classes CSS générées dynamiquement
+  ou des custom properties CSS serait un vrai chantier de refactor UI, hors de portée d'une phase
+  de préparation au déploiement. J'ai documenté précisément pourquoi dans le fichier lui-même et
+  dans CLAUDE.md, pour que ce ne soit pas un mystère si tu resserres la CSP plus tard.
+- **`worker-src 'self'` ajouté explicitement**, alors que la consigne ne listait que
+  `connect-src 'none'` comme exigence précise de CSP. Sans cette directive, il y avait un risque
+  réel de casser le Web Worker selon le navigateur (CSP3 ne garantit pas de repli automatique et
+  fiable de `worker-src` vers une autre directive) — j'ai préféré l'ajouter explicitement plutôt que
+  de livrer une CSP qui casse la fonctionnalité la plus centrale de l'app (le rejeu non-bloquant).
+- **En-têtes `X-Content-Type-Options`/`Referrer-Policy` ajoutés en plus de ce qui était
+  explicitement demandé** — durcissement standard, faible risque de régression, cohérent avec
+  l'esprit de la consigne (« CSP stricte incluant connect-src 'none' »). Question que je t'aurais
+  posée : préfères-tu que je m'en tienne strictement à ce qui est nommé dans le prompt (juste la
+  CSP) plutôt que d'ajouter des en-têtes non demandés, même standards ?
+
+Doutes pour Bonito :
+- Avant tout déploiement réel : fais valider `wrangler.toml` par `wrangler` lui-même (syntaxe
+  susceptible d'évoluer d'une version à l'autre de Wrangler, jamais vérifiée ici faute de pouvoir
+  l'exécuter) et teste la CSP en conditions réelles dans un navigateur avec la console ouverte —
+  une CSP mal calibrée casse silencieusement des fonctionnalités (ici, le risque le plus probable
+  serait `worker-src` ou `style-src` si j'ai mal identifié un cas d'usage).
+- Si tu resserres `style-src` plus tard (retirer `'unsafe-inline'`), les trois fichiers cités
+  ci-dessus (`DataGrid.tsx`, `ColumnProfilePanel.tsx`, `busy-indicator.tsx`) sont les seuls à
+  auditer pour migrer leurs largeurs dynamiques vers une autre technique (custom properties CSS
+  définies via `style` mais lues par une classe statique, par exemple).
 
 ---
 
