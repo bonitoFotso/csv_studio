@@ -69,7 +69,26 @@ traduction vers les types moteur (`SummarizeParams`, `ColumnId`) se fait dans
 
 Un bloc `chart` ne recalcule jamais rien : son champ `summarize` est résolu (noms -> `ColumnId`)
 puis passé directement à `computeSummarizeTable` — l'unique implémentation de l'agrégation dans
-tout le projet, partagée avec l'opération `summarize` du pipeline et le futur export PDF.
+tout le projet, partagée avec l'opération `summarize` du pipeline et l'export PDF.
+
+## Export PDF (`src/pdf/`)
+
+- `reportGeometry.ts` : la seule couche qui calcule des positions de barres/points de ligne/parts
+  de camembert (via `d3-scale`/`d3-shape`), **sans aucune dépendance au DOM**. Le futur aperçu
+  écran devra consommer cette même couche plutôt que recalculer sa propre géométrie — un écart
+  entre l'aperçu et le PDF exporté serait un bug ici, nulle part ailleurs.
+- `charts.tsx` : traduit cette géométrie en primitives `@react-pdf/renderer` (`Svg`/`Path`/`Rect`/`Line`).
+- `fonts.ts` : police Liberation Sans embarquée depuis `src/pdf/fonts/*.ttf` (copiée du paquet
+  système `fonts-liberation`, licence SIL OFL, voir `LICENSE-liberation-fonts.txt`) — jamais une
+  URL. Un export PDF déclenché depuis le navigateur (une fois l'éditeur de rapport câblé) devra
+  changer cette résolution vers une URL d'asset Vite du même bundle, pas un chemin disque.
+- `traceability.ts` : lit les décomptes `matchedAuto`/`matchedManual` structurés sur
+  `OperationReport` (ajoutés cette nuit) plutôt que de reconstruire ces nombres depuis le texte
+  libre de `notes` — si un futur champ de traçabilité manque sur `OperationReport`, l'ajouter
+  structuré plutôt que parser un message.
+- `exportReportPdf.tsx` : `renderReportPdfToBuffer`/`renderReportPdfToFile`. Pas encore appelé
+  depuis l'UI (l'éditeur de rapport n'existe pas encore) — utilisé pour l'instant par les tests et
+  par le script qui génère `samples/*.pdf`.
 
 ## Structure
 
