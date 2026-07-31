@@ -108,3 +108,30 @@ export interface ReportSpec {
   expectedColumns: string[];
   blocks: ReportBlock[];
 }
+
+/**
+ * Rappel condensé du format, destiné à être collé à un assistant qui doit écrire un `ReportSpec`
+ * (voir `assistantExport.ts`) — pas la documentation complète (README.md) mais assez pour générer
+ * un document valide sans accès au dépôt.
+ */
+export const REPORT_SPEC_FORMAT_GUIDE = `Format ReportSpec (JSON) :
+{
+  "formatVersion": 1,
+  "kind": "report",
+  "title": "…",
+  "subtitle": "… (optionnel)",
+  "expectedColumns": ["nom", "note", …],
+  "blocks": [ … ]
+}
+
+Types de bloc (champ "type") :
+- "text" : { "content": "…" }
+- "kpi_row" : { "items": [{ "label": "…", "agg": { "fn": "count"|"countDistinct"|"countNonEmpty"|"sum"|"avg"|"min"|"max"|"median"|"first"|"concat", "column": "…" (absent pour "count") } }] }
+- "chart" : { "chartType": "bar"|"bar_stacked"|"line"|"pie"|"donut"|"histogram", "title": "…",
+  "summarize": { "groupBy": [{ "column": "…", "normalization": "raw"|"text"|"date", "binning": {...} (optionnel, histogramme) }],
+  "aggregates": [{ "fn": "…", "column": "…", "asName": "…" }] }, "x": "…", "series": [{ "column": "…", "label": "…" }] }
+- "table" : { "title": "…", "columns": ["…"], "filter": { "kind": "group", "operator": "and"|"or", "conditions": [{ "kind": "condition", "columnId": "…", "operator": "eq"|"is_empty"|…, "value": "…" }] }, "maxRows": 50 }
+- "page_break" : {}
+
+Toute colonne référencée (y compris dans "summarize"/"filter") doit être un nom présent dans
+"expectedColumns". "normalization": "raw" = comparaison brute (pas de transformation).`;

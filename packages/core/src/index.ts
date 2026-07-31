@@ -13,6 +13,8 @@ export * from './engine/keyNormalize.ts';
 export * from './engine/fuzzyJoin.ts';
 export * from './engine/dedupe.ts';
 export * from './engine/join.ts';
+export * from './engine/anonymize.ts';
+export * from './engine/assistantExport.ts';
 export * from './engine/operations/index.ts';
 export { parseCsvText, tableToCsvString, suggestExportFilename } from './csv.ts';
 export type { ParsedCsv, ParseCsvOptions, ExportCsvOptions } from './csv.ts';
