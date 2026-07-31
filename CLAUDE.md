@@ -53,6 +53,14 @@ Un test qui échoue ne se contourne jamais en le désactivant ou en assouplissan
 - **`toEqual` sur des `undefined`** : Vitest traite une propriété absente et une propriété valant
   `undefined` comme égales dans `toEqual` — utile pour les round-trips `toPortable`/`rebind` où un
   champ optionnel n'est pas toujours présent.
+- **`import()` dynamique inefficace si le module est déjà importé statiquement ailleurs dans le
+  même graphe** : tenter de charger `fuzzyJoin.ts` à la demande dans `engine.worker.ts` n'a rien
+  changé à la taille du chunk — Vite l'a signalé lui-même (`INEFFECTIVE_DYNAMIC_IMPORT`) parce que
+  `enrichJoin.ts` (une opération toujours enregistrée par `registerAllOperations()`) l'importe déjà
+  de façon statique. Un `import()` ne déplace un module dans un chunk séparé que si **aucun** autre
+  point d'entrée du même bundle ne l'importe statiquement — vérifier l'ensemble du graphe
+  d'imports, pas seulement le site qu'on modifie, avant de croire qu'un `import()` réduit quoi que
+  ce soit. Voir la section Performance du README pour le détail de cette tentative (phase 7).
 
 ## ReportSpec — format de rapport (moteur en place, pas encore d'UI)
 
@@ -178,7 +186,8 @@ packages/core/src/csv.ts, report.ts   parsing CSV et texte de rapport, sans DOM
 apps/web/src/worker/           protocole + client + Worker (replay, doublons, rapprochement tournent ici)
 apps/web/src/pdf/              export PDF (géométrie, polices, traçabilité, rendu react-pdf)
 apps/web/src/components/       UI React, un dossier par fonctionnalité (columns/, filters/, join/, duplicates/, recipes/, append/, summarize/)
-apps/web/src/state/workspace.tsx  état global (React context + reducer), persistance Dexie
+apps/web/src/state/workspace.tsx  état global (React context + reducer), persistance Dexie débouncée/différentielle
+apps/web/src/state/persistWorkspace.ts  logique pure de synchronisation Dexie (testée), extraite de workspace.tsx
 apps/web/src/persistence/db.ts    schéma Dexie
 apps/mcp/src/                  serveur MCP (jsonrpc.ts, server.ts, workdir.ts, tools/*)
 ```

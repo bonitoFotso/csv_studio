@@ -140,3 +140,39 @@ Au chargement sur un nouveau fichier, chaque nom dans `expectedColumns` (et, pou
 ## Stack
 
 React + TypeScript + Vite, Tailwind v4 (primitives façon shadcn/ui écrites à la main : cva + tailwind-merge, pas de CLI), PapaParse (import/export CSV), Dexie (persistance IndexedDB), TanStack Table + react-virtual (grille virtualisée), Web Worker natif (rejeu/doublons/rapprochement), Vitest (tests moteur).
+
+## Performance
+
+Mesuré sur une table de test générée pour l'occasion : 50 000 lignes × 25 colonnes
+(`apps/web/scripts/measurePersistence.ts`, `bun run apps/web/scripts/measurePersistence.ts`).
+
+- **Écritures IndexedDB (Dexie) débouncées et différentielles** — `apps/web/src/state/persistWorkspace.ts`
+  (`syncWorkspaceEntries`, testé) + une debounce de 500 ms dans `workspace.tsx`. Avant : chaque
+  dispatch (ex. une frappe qui modifie un paramètre de pipeline) réécrivait **tous** les onglets
+  ouverts en entier, y compris ceux qui n'avaient pas changé. Scénario mesuré — 3 onglets ouverts,
+  10 modifications rapprochées sur un seul d'entre eux :
+  - **Avant** : 30 écritures Dexie déclenchées, ~2168 Mo sérialisés au total.
+  - **Après** : 1 écriture (seul l'onglet réellement modifié, une fois la frappe terminée), ~72 Mo
+    sérialisés — **97 % d'écritures et de volume en moins** sur ce scénario.
+  - Un vidage immédiat (non débouncé) a lieu à la fermeture de l'onglet (`pagehide`) pour ne jamais
+    perdre la dernière modification si elle tombe dans la fenêtre de la debounce — la garantie
+    « le travail survit à la fermeture de l'onglet » n'est pas affaiblie.
+- **Chargement paresseux du moteur de rapprochement flou — tenté, abandonné, documenté.** L'idée
+  (`import()` dynamique de `fuzzyJoin.ts` dans le Worker) a été essayée puis retirée : Vite a
+  lui-même signalé l'import dynamique comme inefficace (`INEFFECTIVE_DYNAMIC_IMPORT`), parce que
+  `fuzzyJoin.ts` est **déjà** importé de façon statique par `enrich_join.ts` — une opération
+  toujours enregistrée par `registerAllOperations()`, elle-même appelée aussi bien dans le Worker
+  que côté thread principal. Le séparer réellement demanderait de rendre `OperationDefinition.apply()`
+  asynchrone pour toutes les opérations (actuellement synchrone par contrat) — un changement
+  d'architecture du moteur, pas une optimisation locale ; jugé trop invasif pour cette session,
+  dans le même esprit que le report du stockage colonnaire et de l'état résidant dans le Worker
+  (voir `NIGHT_LOG.md`, phase 7).
+- **Chargement paresseux de l'export PDF / de la couche graphique — sans objet pour l'instant.**
+  `apps/web/src/pdf/` n'est encore importé nulle part dans l'app (pas de bouton d'export dans
+  l'UI) : le bundle actuel ne le contient déjà pas, il n'y a donc rien à rendre paresseux tant que
+  ce bouton n'existe pas.
+- **Non fait, par choix explicite de portée** : table résidant dans le Worker plutôt que
+  sérialisée à chaque aller-retour, et stockage colonnaire dans `packages/core` (un tableau par
+  colonne plutôt qu'un tableau d'objets par ligne). Les deux sont le gain potentiel le plus
+  important pour un gros fichier, mais aussi les changements les plus invasifs de la liste — à
+  faire ensemble plutôt qu'en session autonome.
