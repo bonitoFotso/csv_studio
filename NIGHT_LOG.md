@@ -148,3 +148,89 @@ Doutes pour Bonito :
 
 ---
 
+## Phase 3 — Export PDF
+Branche : night/3-pdf (part de night/2-reportspec)
+Statut : terminée
+Commits : dbce71b, ccd0594
+Fait :
+- Dépendances ajoutées (toutes nommées dans le prompt) : `@react-pdf/renderer`, `d3-scale`,
+  `d3-shape`, plus `@types/d3-scale`/`@types/d3-shape` en dev (définitions de types uniquement,
+  aucun impact runtime/réseau — techniquement pas nommées, je le signale par prudence).
+- Couche géométrique commune (`src/pdf/reportGeometry.ts`) : aucune dépendance au DOM, calcule
+  barres (groupées/empilées/horizontales), lignes (chemins SVG via `d3-shape`), et
+  camembert/anneau (arcs via `d3-shape`) à partir de `d3-scale`. Le futur aperçu écran devra
+  consommer cette même couche — un écart aperçu/PDF serait un bug ici, nulle part ailleurs.
+- Rendu PDF (`ReportDocument.tsx`, `charts.tsx`) : vrai PDF vectoriel (texte sélectionnable),
+  aucune capture d'écran. Police Liberation Sans embarquée localement (copiée du paquet système
+  `fonts-liberation`, licence SIL OFL incluse) — aucune requête réseau, contrairement aux 14
+  polices standard du PDF qui ne garantissent qu'un sous-ensemble latin-1. Hyphénation désactivée
+  (son algorithme par défaut coupe mal certains enchaînements accentués).
+- Séries distinguables en noir et blanc : palette à luminance échelonnée + hachures diagonales
+  dessinées à la main (clip-path par barre) au-delà de la première série pour les barres,
+  pointillés distincts pour les lignes.
+- Deux modes (`ReportDocument.tsx`) : **brouillon** (filigrane rotatif, bloc de traçabilité
+  complet) et **officiel** (en-tête logo + nom de structure, pagination réelle via le `render`
+  prop de react-pdf, traçabilité condensée en pied de page). Un test vérifie que `computeReport`
+  produit des données strictement identiques indépendamment du mode — seule la présentation change.
+- Traçabilité (`traceability.ts`) : construite à partir des structures moteur existantes
+  (`Pipeline`, `OperationReport`), pas de modèle parallèle. J'ai ajouté deux champs structurés
+  `matchedAuto`/`matchedManual` à `OperationReport` (remplis par `enrich_join`) plutôt que de
+  reconstruire ces nombres en parsant le texte libre de `notes` par regex — un premier essai le
+  faisait, je l'ai corrigé avant de committer : c'était fragile pour rien, j'ai accès au code qui
+  génère ces notes.
+- Vérification avec un vrai PDF généré (pas juste "n'a pas levé d'exception") : en-tête `%PDF-`,
+  reconnu par la commande `file` comme document PDF 1 page valide, `FontFile` bien présent dans
+  le flux d'objets (la police est réellement embarquée, pas juste référencée).
+- 20 nouveaux tests (géométrie, traçabilité, export PDF avec accents/apostrophe typographique),
+  plus 2 tests ajoutés sur `enrich_join` existant pour les nouveaux champs structurés.
+- `bun run test && bun run build` verts avant chaque commit (166 tests au total), `tsc --noEmit`
+  propre, `oxlint` sans nouvel avertissement. La taille du bundle navigateur n'a pas bougé
+  (`src/pdf/` n'est encore importé nulle part dans l'app — normal, pas d'UI cette nuit).
+- README.md et CLAUDE.md mis à jour.
+
+Pas fait / à vérifier :
+- **Pas de bouton dans l'app.** Explicitement hors périmètre : l'éditeur de rapport WYSIWYG est
+  dans la liste d'exclusion de NIGHT_RUN pour cette nuit. `renderReportPdfToBuffer`/`ToFile` sont
+  prêts à être appelés depuis un futur bouton "Exporter en PDF" une fois l'éditeur construit.
+- **Résolution de police pensée pour Node, pas pour le navigateur.** `fonts.ts` résout les
+  fichiers `.ttf` par chemin disque (`fileURLToPath`), ce qui fonctionne pour le script de
+  génération (phase 4) mais ne fonctionnera pas tel quel depuis le navigateur — il faudra pointer
+  `Font.register` vers une URL d'asset Vite du même bundle le jour où le bouton d'export est câblé.
+  Noté dans CLAUDE.md pour ne pas l'oublier.
+- **Logo officiel non testé en pratique.** Le prop `logoSrc` de `ReportDocument` accepte un
+  chemin/data URI mais je n'ai testé qu'un rendu sans logo (aucun logo disponible cette nuit pour
+  un test réaliste) — l'intégration `<Image src=.../>` de react-pdf est standard, risque faible,
+  mais pas vérifiée avec un vrai fichier image.
+- Pas de test visuel humain — normal, c'est exactement ce que la phase 4 (livrables) doit permettre.
+
+Décisions prises faute de pouvoir demander :
+- **Police embarquée = Liberation Sans, pas une police téléchargée.** Le prompt demande une
+  "police embarquée gérant les accents français" sans en nommer une précise. Ajouter une
+  dépendance npm de police (ex. `@fontsource/...`) aurait été une nouvelle dépendance non nommée ;
+  télécharger un fichier depuis une police web aurait été une requête réseau, les deux interdits.
+  J'ai choisi de copier Liberation Sans (SIL Open Font License, redistribution/embarquement
+  explicitement autorisés) depuis le paquet système déjà installé sur cette machine — zéro
+  dépendance ajoutée, zéro réseau, couverture Unicode complète (accents + apostrophe
+  typographique déjà vérifiée par test). Question que je t'aurais posée : cette police / cette
+  méthode de récupération (copie locale, pas de dépendance npm) te convient-elle, ou préfères-tu
+  une police précise que j'intégrerais comme fichier fourni par toi ?
+- **Aucun test visuel des couleurs/hachures.** J'ai choisi une palette et un système de hachures
+  pour la distinction N&B "à l'œil", sans pouvoir vérifier moi-même le rendu (pas d'outil de
+  capture d'écran PDF disponible cette nuit). Le choix est documenté et isolé (`SERIES_COLORS`,
+  `DASH_PATTERNS` dans `charts.tsx`) pour être facile à ajuster si le rendu réel ne te convient
+  pas une fois les PDF de la phase 4 ouverts.
+- **`maxRows` par défaut = toutes les lignes correspondantes** si absent du bloc `table` (pas de
+  troncature implicite). Le prompt montre toujours `maxRows` explicite dans son exemple ; j'ai
+  choisi qu'un bloc sans `maxRows` n'en impose aucune plutôt qu'une limite cachée arbitraire —
+  cohérent avec "aucune devinette silencieuse".
+
+Doutes pour Bonito :
+- La question police (ci-dessus) est la plus importante à trancher avant un usage réel : si tu as
+  une police "maison" ou une préférence (ex. cohérence avec un autre document officiel existant),
+  dis-le et je la substitue — le point d'entrée est un seul fichier (`fonts.ts`).
+- Le rendu des graphiques (couleurs, hachures, mise en page "sobre") n'a jamais été vu par un œil
+  humain avant cette nuit : ouvre `samples/rapport-brouillon.pdf` et `samples/rapport-officiel.pdf`
+  (phase 4) en gardant à l'esprit que c'est un premier jet, pas un rendu peaufiné.
+
+---
+
