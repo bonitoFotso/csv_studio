@@ -3,6 +3,7 @@ import { createId } from '@csv-studio/core/engine/ids.ts';
 import { createPipeline } from '@csv-studio/core/engine/pipeline.ts';
 import type { OperationReport, Pipeline, Table } from '@csv-studio/core/engine/types.ts';
 import { deleteWorkspaceEntry, loadWorkspace, saveActiveId, saveWorkspaceEntry, type StoredWorkspaceEntry } from '@/persistence/db.ts';
+import { syncWorkspaceEntries } from '@/state/persistWorkspace.ts';
 import { workerClient } from '@/worker/client.ts';
 
 export interface WorkspaceEntry {
@@ -93,10 +94,15 @@ function reducer(state: WorkspaceState, action: Action): WorkspaceState {
 
 const WorkspaceContext = React.createContext<{ state: WorkspaceState; dispatch: React.Dispatch<Action> } | null>(null);
 
+/** Écritures Dexie non débouncées : réécrire une table de 50 000 lignes à chaque frappe dans un dialogue rendrait l'UI perceptiblement saccadée. */
+const PERSIST_DEBOUNCE_MS = 500;
+
 export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = React.useReducer(reducer, { entries: {}, order: [], activeId: null });
   const [hydrated, setHydrated] = React.useState(false);
   const prevOrderRef = React.useRef<string[]>([]);
+  /** Dernière version de chaque entrée réellement écrite (comparaison par référence) — permet de ne réécrire que ce qui a changé, jamais tout l'espace de travail à chaque frappe. */
+  const lastPersistedRef = React.useRef<Record<string, WorkspaceEntry | undefined>>({});
 
   // Restaure l'espace de travail depuis IndexedDB au premier montage.
   React.useEffect(() => {
@@ -106,17 +112,30 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  // Persiste chaque table ouverte (et son pipeline) après hydratation, pour retrouver le travail après fermeture de l'onglet.
+  // Persiste chaque table ouverte (et son pipeline) après hydratation, pour retrouver le travail
+  // après fermeture de l'onglet. Débouncée (une frappe qui déclenche plusieurs dispatches
+  // rapprochés ne réécrit qu'une fois, après une pause) et différentielle (seules les entrées dont
+  // la référence a changé depuis la dernière écriture réelle sont réécrites, pas tout l'espace de
+  // travail à chaque dispatch). Un vidage immédiat (non débouncé) a lieu à la fermeture de l'onglet
+  // pour ne jamais perdre la dernière modification si elle tombe dans la fenêtre de la debounce.
   React.useEffect(() => {
     if (!hydrated) return;
-    state.order.forEach((id, index) => {
-      const entry = state.entries[id];
-      if (!entry) return;
-      void saveWorkspaceEntry({ ...entry, order: index, updatedAt: Date.now() });
-    });
-    const removed = prevOrderRef.current.filter((id) => !state.order.includes(id));
-    for (const id of removed) void deleteWorkspaceEntry(id);
-    prevOrderRef.current = state.order;
+    const entries = state.entries;
+    const order = state.order;
+
+    const flush = () => {
+      prevOrderRef.current = syncWorkspaceEntries({ entries, order }, prevOrderRef.current, lastPersistedRef.current, {
+        save: (entry, entryOrder) => void saveWorkspaceEntry({ ...entry, order: entryOrder, updatedAt: Date.now() }),
+        remove: (id) => void deleteWorkspaceEntry(id),
+      });
+    };
+
+    const timer = window.setTimeout(flush, PERSIST_DEBOUNCE_MS);
+    window.addEventListener('pagehide', flush);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener('pagehide', flush);
+    };
   }, [hydrated, state.entries, state.order]);
 
   React.useEffect(() => {
