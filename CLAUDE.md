@@ -24,7 +24,11 @@ changement terminé — le projet n'a pas de CI, ces deux commandes en tiennent 
   zéro initial, pas de reformatage de date silencieux). Le typage détecté (`profile.ts`) sert
   uniquement à proposer les bons opérateurs, jamais à convertir la donnée.
 - Aucun nom de colonne codé en dur, nulle part — y compris dans les gabarits de rapport à venir.
-- Aucune requête réseau dans le code de l'app (la CSP de prod interdira `connect-src`).
+- Aucune requête réseau vers un tiers dans le code de l'app. La CSP de prod (`apps/web/public/_headers`)
+  pose `connect-src 'self'`, pas `'none'` : le bouton d'export PDF charge sa police embarquée par
+  `fetch()` (voir section Export PDF), mais strictement depuis l'origine de l'app elle-même (son
+  propre asset bundlé) — jamais vers un domaine externe. Toute nouvelle requête `fetch`/XHR vers un
+  domaine qui n'est pas celui de l'app romprait cet invariant.
 - Le `Pipeline` est rejouable/désactivable/annulable étape par étape via `replay()`, qui tourne
   dans le Worker (`apps/web/src/worker/engine.worker.ts`) — jamais sur le thread principal pour une table
   de taille réelle.
@@ -61,6 +65,14 @@ Un test qui échoue ne se contourne jamais en le désactivant ou en assouplissan
   point d'entrée du même bundle ne l'importe statiquement — vérifier l'ensemble du graphe
   d'imports, pas seulement le site qu'on modifie, avant de croire qu'un `import()` réduit quoi que
   ce soit. Voir la section Performance du README pour le détail de cette tentative (phase 7).
+- **Un import Node (`node:url`, `fileURLToPath`) au sommet d'un fichier casse le bundle navigateur
+  même si le binding importé n'est jamais utilisé par l'appelant.** `fonts.ts` important `node:url`
+  et `ReportDocument.tsx`/`charts.tsx` n'important de `fonts.ts` que la constante
+  `REPORT_FONT_FAMILY` (pas `fileURLToPath`) n'empêche pas Vite de devoir résoudre `node:url` pour
+  tout le module dès qu'un composant navigateur importe `fonts.ts` — la résolution de module
+  précède l'élimination de code mort. Fix : extraire toute constante/donnée pure partagée entre un
+  module Node-only et du code navigateur dans un fichier séparé sans aucun import (`fontFamily.ts`)
+  plutôt que de compter sur le tree-shaking pour éliminer un import inutilisé.
 
 ## ReportSpec — format de rapport (moteur en place, pas encore d'UI)
 
@@ -86,17 +98,30 @@ tout le projet, partagée avec l'opération `summarize` du pipeline et l'export 
   écran devra consommer cette même couche plutôt que recalculer sa propre géométrie — un écart
   entre l'aperçu et le PDF exporté serait un bug ici, nulle part ailleurs.
 - `charts.tsx` : traduit cette géométrie en primitives `@react-pdf/renderer` (`Svg`/`Path`/`Rect`/`Line`).
+- `fontFamily.ts` : uniquement la constante `REPORT_FONT_FAMILY`, aucun import — `ReportDocument.tsx`/
+  `charts.tsx` l'importent d'ici, pas de `fonts.ts`, pour rester bundleables côté navigateur sans
+  tirer `node:url` dans leur graphe.
 - `fonts.ts` : police Liberation Sans embarquée depuis `apps/web/src/pdf/fonts/*.ttf` (copiée du paquet
   système `fonts-liberation`, licence SIL OFL, voir `LICENSE-liberation-fonts.txt`) — jamais une
-  URL. Un export PDF déclenché depuis le navigateur (une fois l'éditeur de rapport câblé) devra
-  changer cette résolution vers une URL d'asset Vite du même bundle, pas un chemin disque.
+  URL distante. Résolution par chemin de fichier (`fileURLToPath`, Node uniquement) : utilisé
+  seulement par les scripts (`generateSamples.ts`) et les tests (`exportReportPdf.test.ts`) qui
+  tournent sous Bun/Node, jamais importé depuis un composant React.
+- `fontsBrowser.ts` : même police, résolue en URL d'asset Vite (`new URL('./fonts/x.ttf',
+  import.meta.url).href`, sans `fileURLToPath`) — utilisé par le bouton d'export PDF de l'app.
+  `@react-pdf/renderer` charge la police par `fetch()` côté navigateur (il lui faut les octets
+  bruts pour les incorporer au PDF) : voir `apps/web/public/_headers` pour la CSP correspondante
+  (`connect-src 'self'`, un fetch same-origin de l'asset du bundle, jamais un appel réseau externe).
 - `traceability.ts` : lit les décomptes `matchedAuto`/`matchedManual` structurés sur
   `OperationReport` (ajoutés cette nuit) plutôt que de reconstruire ces nombres depuis le texte
   libre de `notes` — si un futur champ de traçabilité manque sur `OperationReport`, l'ajouter
   structuré plutôt que parser un message.
-- `exportReportPdf.tsx` : `renderReportPdfToBuffer`/`renderReportPdfToFile`. Pas encore appelé
-  depuis l'UI (l'éditeur de rapport n'existe pas encore) — utilisé pour l'instant par les tests et
-  par le script qui génère `samples/*.pdf`.
+- `exportReportPdf.tsx` : `renderReportPdfToBuffer`/`renderReportPdfToFile` (Node uniquement,
+  `renderToBuffer`/`renderToFile` de `@react-pdf/renderer` n'existent pas côté navigateur) —
+  utilisé par les tests et par le script qui génère `samples/*.pdf`, jamais par l'app.
+- `exportReportPdfBrowser.tsx` : `renderReportPdfToBlob`, utilise `pdf(...).toBlob()` (API
+  navigateur du même paquet) — chargé en `import()` dynamique par `ReportExportDialog.tsx`
+  (`apps/web/src/components/report/`), jamais importé statiquement ailleurs dans l'app, pour que
+  `@react-pdf/renderer` (~1,5 Mo) reste hors du bundle initial.
 
 ## Livrables de démonstration (`apps/web/scripts/`, `samples/`)
 
@@ -185,7 +210,7 @@ packages/core/src/engine/operations/  une opération = un fichier
 packages/core/src/csv.ts, report.ts   parsing CSV et texte de rapport, sans DOM
 apps/web/src/worker/           protocole + client + Worker (replay, doublons, rapprochement tournent ici)
 apps/web/src/pdf/              export PDF (géométrie, polices, traçabilité, rendu react-pdf)
-apps/web/src/components/       UI React, un dossier par fonctionnalité (columns/, filters/, join/, duplicates/, recipes/, append/, summarize/)
+apps/web/src/components/       UI React, un dossier par fonctionnalité (columns/, filters/, join/, duplicates/, recipes/, append/, summarize/, report/)
 apps/web/src/state/workspace.tsx  état global (React context + reducer), persistance Dexie débouncée/différentielle
 apps/web/src/state/persistWorkspace.ts  logique pure de synchronisation Dexie (testée), extraite de workspace.tsx
 apps/web/src/persistence/db.ts    schéma Dexie
@@ -202,7 +227,9 @@ mais **aucune commande `wrangler` n'a été exécutée**. Points à retenir si t
 `worker-src 'self'` est nécessaire (le Web Worker est au cœur de l'app), `style-src 'unsafe-inline'`
 aussi (largeurs en style React inline dans `DataGrid.tsx`/`ColumnProfilePanel.tsx`/
 `busy-indicator.tsx`), mais `script-src` n'a jamais besoin de `'unsafe-eval'` — vérifié par
-recherche exhaustive (`grep`), aucun `eval()`/`new Function` nulle part dans le projet.
+recherche exhaustive (`grep`), aucun `eval()`/`new Function` nulle part dans le projet. `connect-src`
+est `'self'`, pas `'none'` (revu après le câblage du bouton d'export PDF) : la police embarquée se
+charge par `fetch()` côté navigateur, mais toujours vers l'origine de l'app elle-même.
 
 ## Session NIGHT_RUN (agrégation, rapports PDF, monorepo, MCP)
 
