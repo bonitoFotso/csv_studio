@@ -1,0 +1,508 @@
+﻿nom,prenom,date_naissance,nb_presences,note,decision
+Owona,Noëlle,18/04/1993,18,"9,4",En attente
+Ateba,Céline,14/01/1995,17,1,Admis
+Talla,Alice,24/03/1980,10,16,Recalé
+Fotso,Alice,09/03/1996,15,17,Admis
+Talla,François,03/12/1997,19,9,Admis
+Ngo,Bonito,21/01/2002,19,6,Admis
+Tchoumi,Aïcha,17/06/2002,7,12,En attente
+Talla,Noëlle,16/06/2002,6,2,Admis
+Ekani,Estelle,05/12/1983,14,"14,0",Recalé
+Mballa,Désiré,23/04/2002,8,3,Recalé
+Fotso,Léa,14/08/1985,3,1,En attente
+Talla,François,28/07/2004,3,,Admis
+Abena,François,10/05/1997,18,7,Recalé
+Tchoumi,Rémy,07/09/1988,3,14,Admis
+Sadjo,Bonito,26/09/1989,17,"8,8",En attente
+Tchoumi,Aïcha,06/10/1995,8,11,Recalé
+M'Bappe,Aïcha,19/07/1984,15,,En attente
+Nkolo,Chloé,25/06/1988,14,7,Recalé
+Sadjo,Aïcha,21/08/1982,20,18,
+Ateba,Éric,16/06/1987,15,16,
+Mballa,Désiré,10/06/1991,6,3,Admis
+Tchoumi,Amélie,27/02/1980,1,17,Recalé
+Kamga,Aïcha,03/07/1997,,19,Recalé
+Ekani,Amélie,02/02/1981,5,13,Recalé
+Assomo,Bonito,06/07/2000,19,"19,0",Recalé
+M'Bappe,Estelle,22/06/1987,11,14,Recalé
+Assomo,Théo,11/11/1996,18,6,Recalé
+Sadjo,Amélie,09/02/1997,20,"9,7",Recalé
+Ekani,Léa,14/07/2002,1,10,En attente
+Biya,Noëlle,03/03/1981,2,8,En attente
+Zang,Alice,18/11/1986,,18,Recalé
+Kamga,Chloé,15/09/1986,10,"11,8",En attente
+Zang,Estelle,07/03/1988,20,,
+Abena,Aïcha,11/10/1998,4,16,
+Ngo,Alice,27/06/1999,3,3,En attente
+Njoya,Joël,06/07/1995,19,10,Admis
+Assomo,Rémy,08/10/1997,18,,Recalé
+Mballa,Chloé,28/02/1982,4,9,Recalé
+Essomba,Désiré,15/03/1988,16,9,Admis
+Essomba,Bonito,02/07/1986,13,1,En attente
+Zang,Aïcha,14/07/1992,,9,Admis
+Ateba,Bonito,08/12/1998,12,18,Admis
+Abena,Régis,17/09/1983,19,17,Admis
+Fouda,Alice,24/08/1993,13,20,En attente
+Nkolo,Théo,14/01/2004,18,14,Admis
+Nkolo,Régis,21/05/1983,1,"2,8",Recalé
+N'Guessan,Chloé,20/01/1998,18,5,En attente
+Essomba,André,28/07/1991,3,"11,9",Recalé
+Ekani,Noëlle,28/03/1994,3,14,Recalé
+Tchoumi,Chloé,26/02/1981,0,1,
+Kamga,Léa,06/05/2000,15,,Recalé
+Fotso,Chloé,12/08/1990,12,"3,9",En attente
+Ateba,François,19/05/1994,20,18,Recalé
+Fouda,Amélie,15/12/1987,20,0,Recalé
+Assomo,François,11/07/1987,4,6,Recalé
+Sadjo,Amélie,19/11/1994,11,18,En attente
+Biya,Chloé,05/05/1995,0,14,Admis
+Fotso,Éric,04/09/1991,14,"4,3",
+Owona,Céline,06/02/2000,7,18,En attente
+Essomba,Julie,11/05/2003,3,18,Admis
+Fotso,Björn,15/12/1994,14,10,En attente
+Kamga,M'Barka,10/06/1993,7,7,En attente
+M'Bappe,M'Barka,12/07/1998,20,4,Admis
+Mballa,Bonito,11/06/1993,20,15,Recalé
+Ateba,François,04/05/2001,19,1,Recalé
+Kamga,Chloé,13/12/1985,8,0,Admis
+N'Guessan,Régis,04/03/1999,3,,En attente
+Ekani,Théo,24/07/1997,4,0,En attente
+Fouda,M'Barka,03/08/1996,13,,En attente
+Ekani,Bonito,08/01/1989,18,20,Admis
+Fotso,Aïcha,22/12/2003,,3,Admis
+Kamga,Chloé,25/01/1994,14,12,En attente
+Njoya,Noëlle,18/08/1985,11,9,Recalé
+Biya,Léa,24/11/1996,10,"15,6",Recalé
+Zang,Noëlle,26/12/1990,2,10,Admis
+Essomba,Joël,27/01/2003,15,"9,2",Admis
+N'Guessan,François,02/04/1983,16,,Admis
+Ateba,Amélie,22/04/1994,18,15,Recalé
+N'Guessan,Rémy,20/04/1990,7,4,En attente
+Abena,Théo,24/05/1992,5,1,Admis
+Ngo,Léa,14/12/1989,15,17,Admis
+Nkolo,André,14/11/1998,5,,Recalé
+Owona,François,26/07/1995,8,19,Admis
+M'Bappe,Léa,16/05/2000,18,8,Recalé
+Fotso,François,03/03/1993,18,"5,7",En attente
+Zang,M'Barka,18/12/2002,8,"15,1",Recalé
+Essomba,Rémy,07/08/1992,14,16,Admis
+Sadjo,Julie,01/04/1998,10,1,Recalé
+Njoya,Chloé,01/03/2004,17,16,Admis
+Talla,M'Barka,21/08/1987,15,19,En attente
+Fouda,Léa,18/07/1981,5,19,En attente
+Assomo,M'Barka,28/08/1992,15,,En attente
+Nkolo,Théo,16/05/2002,0,"7,4",En attente
+Njoya,Désiré,06/02/1980,19,19,Admis
+M'Bappe,Léa,20/11/1994,16,17,En attente
+Njoya,François,24/07/1983,7,18,En attente
+Mballa,Julie,02/01/2000,12,"7,7",Recalé
+M'Bappe,M'Barka,26/12/1986,8,,Recalé
+Sadjo,Amélie,28/06/1991,11,1,Recalé
+Zang,Éric,07/03/1988,10,8,Recalé
+Biya,Alice,07/04/1980,9,18,Recalé
+Biya,Chloé,15/10/1997,12,7,Recalé
+Talla,Régis,10/06/1983,5,7,Admis
+Ekani,Bonito,16/02/1991,2,4,Admis
+Abena,Noëlle,11/08/2000,5,14,En attente
+Ekani,Aïcha,20/11/1983,10,"11,0",Recalé
+M'Bappe,Céline,15/01/1998,19,"4,7",Admis
+Biya,François,10/12/1981,12,7,En attente
+Ateba,Aïcha,22/03/1992,11,12,Recalé
+Ateba,François,02/01/1999,1,,
+Talla,Régis,14/06/2004,7,2,Recalé
+Kamga,Julie,11/09/1998,4,,Recalé
+Ekani,Éric,03/01/1990,20,12,Recalé
+Biya,Noëlle,27/11/1984,12,"8,6",En attente
+Njoya,Julie,26/03/2003,7,8,Recalé
+Tchoumi,Théo,23/02/1983,10,1,
+Ateba,Léa,23/03/2002,9,10,En attente
+Abena,Julie,27/07/2003,5,3,Recalé
+Kamga,Julie,09/07/2004,9,"9,0",Admis
+Talla,Éric,26/03/1981,8,11,En attente
+Biya,Léa,26/02/1987,16,15,
+Talla,Céline,02/12/2003,7,17,Admis
+Fotso,Aïcha,06/04/1987,5,"19,9",Recalé
+Ngo,Julie,21/04/1986,4,18,En attente
+Ngo,Björn,03/01/1996,1,20,Recalé
+Ateba,Julie,20/04/1988,9,"6,9",Recalé
+Owona,Léa,03/09/1991,18,,Recalé
+Ekani,Rémy,04/09/1980,20,17,Admis
+M'Bappe,Björn,19/02/1990,8,,Recalé
+Mballa,Estelle,22/04/1988,19,,Recalé
+Fouda,Julie,25/10/1985,10,"11,1",Admis
+Nkolo,Théo,04/09/1992,,13,Recalé
+Mballa,Éric,04/10/1988,13,"0,6",En attente
+Fotso,Joël,28/07/1993,14,14,Recalé
+Essomba,Alice,23/12/1981,4,1,En attente
+Essomba,Joël,28/12/1983,14,14,Recalé
+Fotso,François,05/08/1998,18,10,En attente
+Njoya,Björn,08/11/1995,11,,Admis
+Owona,Alice,24/03/1983,3,3,Recalé
+Sadjo,Alice,23/08/1983,2,"15,8",Recalé
+N'Guessan,Chloé,14/09/1990,20,,Recalé
+Ekani,Amélie,02/11/2002,8,19,Recalé
+Essomba,François,23/04/1986,11,4,Admis
+Zang,Chloé,21/04/1989,16,10,Admis
+Fotso,Rémy,20/08/2000,9,"7,8",En attente
+Ngo,André,14/05/1996,2,,Recalé
+Sadjo,Estelle,21/11/1981,13,0,Admis
+Kamga,Julie,01/01/1986,20,15,En attente
+N'Guessan,Björn,16/01/1999,11,6,Admis
+Biya,Julie,18/07/1997,11,"11,1",Admis
+Ngo,Céline,19/05/2002,14,9,En attente
+Ngo,Estelle,14/04/1992,14,"10,2",En attente
+N'Guessan,Noëlle,28/02/1991,6,,Admis
+Abena,Bonito,19/09/1986,20,7,Recalé
+Ngo,Aïcha,16/04/1987,15,"4,5",Recalé
+Talla,Estelle,09/10/1985,20,4,En attente
+Zang,Chloé,20/08/1996,20,18,
+Njoya,Théo,14/12/1982,2,14,Admis
+Nkolo,Chloé,13/07/1992,3,3,Admis
+Abena,Rémy,04/12/1983,,"4,7",Admis
+Ekani,Bonito,18/03/1994,4,"11,0",Admis
+Biya,Léa,19/02/1983,2,,Recalé
+Fotso,Léa,16/10/2004,3,18,Recalé
+Zang,Rémy,14/12/2004,11,"14,7",Admis
+Fotso,Éric,22/03/1989,0,"8,8",En attente
+Essomba,Bonito,15/10/1983,14,20,En attente
+Fotso,Léa,16/10/1983,6,18,Recalé
+Ekani,Amélie,03/04/1991,14,"19,3",Admis
+Ekani,Éric,11/12/1986,20,1,Admis
+Owona,Bonito,16/08/1988,18,14,Recalé
+N'Guessan,Alice,16/11/2004,19,15,Admis
+Talla,Désiré,06/06/2001,9,4,Admis
+Owona,Désiré,02/03/1987,11,"4,7",En attente
+Owona,André,05/02/1995,0,"2,2",Admis
+Ateba,Bonito,16/01/1982,8,"18,5",En attente
+M'Bappe,M'Barka,08/01/2004,,12,En attente
+Assomo,Céline,23/09/1980,12,,En attente
+Abena,Julie,06/05/1983,8,10,Admis
+Sadjo,Éric,25/10/1998,9,"12,6",Recalé
+Njoya,Julie,20/12/1995,0,19,Recalé
+Nkolo,Noëlle,27/05/2002,18,16,Admis
+Essomba,Julie,18/04/2000,7,14,En attente
+Owona,Désiré,03/11/1997,6,14,Recalé
+Zang,Joël,03/02/1987,14,18,Recalé
+Abena,Bonito,19/11/2004,2,11,Recalé
+Ngo,Aïcha,03/02/1997,14,12,Admis
+Nkolo,Léa,06/04/1986,17,"10,2",En attente
+Biya,Bonito,12/01/1983,16,2,En attente
+Abena,Alice,10/08/1998,,12,Recalé
+Nkolo,André,18/11/1996,20,"1,9",Recalé
+Assomo,Alice,09/06/1997,14,17,En attente
+Ngo,Noëlle,03/09/1998,16,17,En attente
+Ngo,Éric,28/01/1992,11,"14,3",Admis
+M'Bappe,Amélie,12/08/2001,8,,Admis
+Biya,Rémy,09/03/1983,3,8,Admis
+N'Guessan,François,14/03/2000,5,5,Recalé
+Nkolo,Rémy,21/09/2000,4,,En attente
+M'Bappe,Noëlle,02/07/1997,6,17,Admis
+Abena,Théo,23/11/1994,16,"1,7",En attente
+Ekani,Théo,20/05/2000,2,8,Admis
+Kamga,Léa,16/05/1997,1,"10,2",En attente
+Abena,Éric,11/01/2000,13,1,En attente
+N'Guessan,M'Barka,19/01/1987,5,14,Recalé
+Mballa,Aïcha,08/02/2001,11,"10,4",Admis
+Essomba,Aïcha,05/08/2000,8,"6,3",Recalé
+Owona,Julie,26/09/1980,6,7,Admis
+Fouda,François,26/05/1998,6,,Recalé
+M'Bappe,Léa,23/11/2002,5,5,Recalé
+N'Guessan,Alice,09/05/1984,14,13,Recalé
+Owona,Björn,08/07/2000,17,15,
+Fotso,M'Barka,14/06/2003,18,8,Recalé
+Talla,Aïcha,20/03/2000,16,2,En attente
+Kamga,François,15/11/2002,16,"1,2",Recalé
+Njoya,Björn,06/03/1993,4,,En attente
+Biya,André,23/02/1996,18,,En attente
+Fotso,Alice,22/04/1982,3,"8,4",Recalé
+Njoya,Désiré,16/12/1988,10,3,En attente
+Ngo,Julie,10/03/2000,18,4,En attente
+Njoya,Théo,02/02/1984,2,"19,3",Recalé
+Nkolo,Joël,26/08/1996,11,7,Admis
+Abena,Éric,07/11/1984,20,2,Admis
+Fotso,Alice,18/09/2004,13,"15,6",
+Fotso,M'Barka,07/05/2004,14,10,Recalé
+Ekani,Théo,04/05/2004,15,"2,7",Admis
+Kamga,Chloé,21/07/1997,9,14,Recalé
+Ekani,Rémy,09/11/1982,15,19,Recalé
+Ekani,Théo,24/05/1992,15,6,Recalé
+Ateba,Chloé,19/01/1986,6,,En attente
+Biya,M'Barka,24/03/1985,7,"13,7",En attente
+Assomo,Noëlle,24/08/1992,0,1,Recalé
+Owona,Céline,14/05/1985,18,0,Admis
+Talla,Noëlle,10/11/1980,1,5,Admis
+Nkolo,M'Barka,14/06/2002,17,12,Admis
+Ngo,Alice,01/11/2003,12,2,Recalé
+Kamga,Amélie,27/05/1988,17,16,En attente
+Zang,Amélie,22/10/1992,11,16,Recalé
+N'Guessan,François,10/09/1990,8,"7,7",Recalé
+Biya,Éric,01/09/1991,16,7,En attente
+Fouda,Chloé,09/04/1994,9,10,En attente
+Kamga,Céline,15/08/1980,14,9,Admis
+Assomo,Julie,09/06/1990,16,4,En attente
+Fotso,Julie,02/03/1990,0,15,En attente
+Ngo,Rémy,24/11/2003,10,"17,6",Recalé
+Assomo,Céline,26/08/1987,17,2,En attente
+Ngo,Léa,20/04/1999,20,14,Recalé
+N'Guessan,Éric,07/03/1989,13,11,Recalé
+Talla,Aïcha,14/10/1990,11,6,Recalé
+Sadjo,Joël,17/07/1992,12,"3,2",En attente
+Abena,Estelle,18/12/1998,8,7,Recalé
+Tchoumi,Rémy,09/02/1999,4,"4,2",En attente
+Njoya,Théo,12/04/1988,1,16,En attente
+Fotso,Julie,14/08/2003,13,6,Admis
+Essomba,Alice,06/12/1991,,16,Admis
+Zang,Théo,17/11/1993,7,9,Admis
+Ekani,Bonito,09/10/1988,16,5,Recalé
+Tchoumi,M'Barka,03/02/1983,15,16,
+Biya,Aïcha,13/02/1986,12,9,Admis
+Abena,M'Barka,13/10/1985,,2,Admis
+Biya,Désiré,08/04/1998,12,16,Recalé
+Owona,Chloé,14/07/2003,1,14,Admis
+Ateba,Aïcha,27/01/1981,19,,Recalé
+Fouda,François,25/07/1989,14,"6,7",En attente
+Biya,Bonito,18/11/1997,19,17,
+Owona,André,18/02/1998,,"5,2",Recalé
+Njoya,Amélie,21/09/2004,13,"8,2",Recalé
+Zang,Björn,21/11/1996,19,"15,1",Recalé
+Biya,M'Barka,17/04/2003,13,"13,7",Admis
+Assomo,Régis,15/10/1982,13,"13,3",Recalé
+M'Bappe,Julie,04/04/1988,13,11,Recalé
+Abena,Julie,27/12/1988,12,"9,6",Recalé
+N'Guessan,Régis,20/08/1984,9,10,Recalé
+Fotso,Amélie,02/06/1988,10,,En attente
+Tchoumi,Léa,27/06/2002,19,8,
+M'Bappe,Chloé,12/10/1985,15,1,En attente
+Fotso,Noëlle,22/01/1991,18,"17,7",En attente
+Abena,Théo,01/04/1994,16,7,En attente
+Assomo,Céline,02/07/1994,13,8,Recalé
+Kamga,Rémy,05/03/1992,14,"13,4",Admis
+Njoya,Estelle,06/05/1987,7,"12,0",Admis
+Tchoumi,Björn,17/06/1999,10,13,
+Owona,Aïcha,25/07/1980,5,"9,5",En attente
+Essomba,Julie,03/08/2002,19,7,En attente
+Tchoumi,Estelle,20/09/1989,9,1,Admis
+Kamga,Éric,18/12/2002,17,"4,1",Admis
+Owona,Estelle,09/01/2002,9,11,Recalé
+Fouda,Régis,03/01/1987,11,"0,7",Admis
+Zang,Estelle,27/04/1997,12,12,Recalé
+M'Bappe,François,02/01/2003,18,14,Recalé
+M'Bappe,Bonito,07/03/1991,7,14,Admis
+Tchoumi,Léa,06/01/1984,2,"5,2",Recalé
+N'Guessan,Théo,27/07/1991,3,9,En attente
+Ateba,André,03/05/1999,4,8,Admis
+Biya,Chloé,18/11/1992,7,18,Admis
+Sadjo,Julie,09/03/1988,19,6,Admis
+Tchoumi,Joël,06/10/1983,14,0,
+Essomba,André,18/09/1986,17,"17,7",Admis
+Kamga,Léa,19/11/1994,20,5,Recalé
+Fotso,Rémy,11/10/1982,11,"6,3",
+Ngo,Rémy,05/10/2003,6,"9,4",En attente
+Abena,Désiré,25/11/1993,14,3,En attente
+Talla,Éric,28/11/2003,5,12,Admis
+Assomo,Alice,06/11/1987,17,8,Recalé
+Kamga,Léa,20/09/1983,4,7,Admis
+Assomo,Aïcha,11/08/1989,10,11,En attente
+Kamga,André,23/05/2002,14,10,Recalé
+Abena,Alice,15/10/2003,19,"15,0",Admis
+Mballa,Régis,21/06/1997,17,9,Admis
+Zang,Björn,19/10/1997,2,"10,8",En attente
+Fouda,Rémy,18/04/1987,12,"12,7",Admis
+Talla,André,07/08/1984,10,13,En attente
+M'Bappe,Alice,17/03/1991,8,3,Admis
+Tchoumi,Bonito,07/12/1985,5,16,Recalé
+Ngo,Rémy,03/12/2004,15,"19,6",En attente
+Essomba,François,18/05/1982,5,20,Admis
+Assomo,André,18/09/1990,12,20,Recalé
+Tchoumi,Joël,13/10/1997,19,11,Recalé
+Mballa,Désiré,10/03/1995,14,,Recalé
+Biya,Éric,05/04/1995,3,13,Admis
+Essomba,Amélie,09/04/1983,8,8,Admis
+Owona,Rémy,22/02/1982,16,"12,8",En attente
+Abena,Aïcha,13/04/1993,,"0,9",En attente
+Nkolo,Alice,25/03/1990,9,10,Recalé
+Essomba,Éric,16/09/1994,20,9,
+Essomba,Julie,01/04/2003,1,,Recalé
+Talla,Björn,23/08/1987,3,6,En attente
+Ngo,François,19/02/1986,9,15,Recalé
+N'Guessan,Estelle,11/06/1996,10,,Admis
+Ateba,Aïcha,20/06/1990,5,"1,2",En attente
+Mballa,Bonito,03/03/1997,4,8,En attente
+Assomo,Désiré,15/06/1995,13,"6,5",Recalé
+Zang,Chloé,07/06/1982,15,17,
+Njoya,Amélie,18/12/1985,20,17,Admis
+Njoya,Théo,18/07/1993,5,"3,8",Admis
+Ngo,Régis,13/07/1994,6,4,Admis
+Assomo,Joël,03/03/1986,6,16,
+Fotso,Éric,17/01/1982,17,9,En attente
+Ngo,Chloé,25/08/1997,7,4,Recalé
+Essomba,Désiré,17/12/1997,17,,En attente
+Kamga,François,28/09/2003,10,6,Recalé
+Tchoumi,Léa,07/10/1985,2,"4,5",En attente
+N'Guessan,Aïcha,17/08/1993,6,14,En attente
+Ngo,M'Barka,23/04/1993,16,15,Recalé
+Ateba,Joël,23/06/1981,6,1,En attente
+Essomba,Estelle,23/06/1980,6,18,Recalé
+Fouda,Chloé,05/09/1991,13,1,Recalé
+Biya,M'Barka,20/02/2002,10,"19,6",
+Fouda,Alice,22/01/1986,15,19,Admis
+Owona,Éric,02/12/1991,5,"18,8",
+Fotso,André,24/02/1993,18,20,Admis
+Owona,Théo,04/04/2003,20,"12,2",En attente
+Fotso,M'Barka,24/03/2000,15,"12,1",Recalé
+Ekani,Björn,05/05/2004,15,6,En attente
+Abena,Björn,20/03/1980,18,"5,7",En attente
+Sadjo,Céline,23/09/1994,10,5,Admis
+Ngo,Joël,18/06/2000,8,"5,0",En attente
+Fotso,Alice,05/09/1985,10,4,En attente
+Abena,Björn,13/03/2000,14,17,Admis
+Ngo,Amélie,08/06/1995,10,8,Admis
+Njoya,M'Barka,18/05/2000,2,7,Admis
+Sadjo,Aïcha,27/10/1991,,16,Recalé
+Ngo,Noëlle,01/12/1998,20,"19,1",Recalé
+Essomba,M'Barka,28/04/1982,9,19,Admis
+Zang,François,23/12/1984,10,19,
+Talla,Joël,09/09/1986,8,"8,6",Recalé
+Tchoumi,Régis,21/05/1994,18,18,En attente
+Sadjo,André,10/02/1994,7,,Recalé
+Sadjo,Joël,20/06/1985,8,6,Admis
+Ngo,Amélie,14/10/1986,2,"13,9",En attente
+Essomba,M'Barka,02/05/1998,14,12,Admis
+Fotso,Björn,22/06/1996,1,7,Admis
+Kamga,Régis,23/01/1981,5,"17,7",Admis
+N'Guessan,Théo,10/11/1990,,7,Admis
+Zang,Joël,22/01/1981,0,14,
+Abena,Amélie,16/06/2004,18,"17,7",Admis
+Kamga,Joël,14/06/1992,1,"1,3",En attente
+Owona,Chloé,28/05/1985,9,,Admis
+M'Bappe,Théo,08/12/1998,,6,Recalé
+M'Bappe,Éric,26/12/1981,18,13,Admis
+Biya,Désiré,28/12/2003,7,"9,5",Admis
+Ngo,Amélie,20/08/1991,19,19,Admis
+Njoya,Joël,23/04/2002,4,5,Admis
+Ateba,Alice,13/04/1988,10,11,
+Tchoumi,Amélie,05/11/1999,3,3,
+Tchoumi,Alice,15/11/2002,9,5,Admis
+Talla,Bonito,06/07/1997,9,,En attente
+Nkolo,Théo,20/07/1982,,7,Admis
+Tchoumi,Bonito,21/06/1993,14,19,Recalé
+Ngo,Bonito,25/08/2000,11,13,Admis
+Owona,Noëlle,13/10/2004,17,,Admis
+Owona,Estelle,12/01/1990,1,1,Admis
+Fotso,Rémy,27/01/1983,,"13,8",Recalé
+Sadjo,François,28/07/2003,10,"17,0",En attente
+Owona,Bonito,06/07/1997,8,12,Admis
+Abena,Rémy,15/10/1984,,"16,3",Admis
+Owona,Estelle,22/09/2000,,"1,9",Admis
+M'Bappe,Noëlle,26/05/2002,14,17,Recalé
+Zang,André,25/04/2000,16,3,Admis
+Mballa,Céline,06/01/1986,14,"8,7",En attente
+Ngo,Léa,07/02/1993,4,"19,2",En attente
+Essomba,Joël,27/12/1986,7,4,Recalé
+Kamga,Estelle,11/01/1996,14,"19,9",Recalé
+Mballa,Julie,22/03/1997,3,"15,8",Recalé
+N'Guessan,Noëlle,19/06/1995,10,"3,7",Admis
+Tchoumi,Estelle,25/05/1994,12,"6,3",Recalé
+Ekani,Julie,07/06/1988,7,9,
+Fotso,Björn,21/04/2004,20,3,En attente
+Abena,Aïcha,12/09/1989,20,9,En attente
+Tchoumi,Céline,24/10/2004,9,17,Recalé
+Assomo,Théo,02/04/1980,11,"11,5",Admis
+Assomo,Joël,25/08/1983,13,14,En attente
+Assomo,Rémy,27/09/1998,5,12,En attente
+Mballa,Björn,19/03/2002,10,,Admis
+Abena,Björn,14/08/1999,,20,Recalé
+Assomo,Aïcha,21/04/1986,0,,Recalé
+Owona,Céline,16/12/2000,0,20,Admis
+Njoya,Alice,23/09/1981,4,"10,1",Admis
+Njoya,Amélie,22/11/1981,13,4,Admis
+Zang,Rémy,24/11/1982,1,16,En attente
+Ngo,Noëlle,26/06/1995,14,8,En attente
+Talla,Noëlle,02/03/1980,15,15,En attente
+Tchoumi,Désiré,04/12/1998,12,18,En attente
+Kamga,Alice,01/11/1985,2,"15,9",Recalé
+Talla,Théo,06/05/1992,15,12,Recalé
+Talla,Estelle,22/12/1989,13,0,Admis
+Fotso,Désiré,07/10/1999,0,11,Admis
+Sadjo,Léa,10/07/2002,3,"19,6",Admis
+Essomba,Julie,19/11/1993,11,11,Admis
+Njoya,Éric,13/04/1998,1,"18,5",Admis
+Abena,Amélie,11/12/1987,7,7,
+Fotso,Éric,05/07/1997,2,18,En attente
+M'Bappe,François,06/11/1992,10,8,En attente
+N'Guessan,François,16/03/1981,13,1,Recalé
+Mballa,Rémy,28/01/1994,18,10,Recalé
+Fotso,Amélie,28/03/2004,6,18,En attente
+Fouda,Céline,27/07/1982,,16,En attente
+N'Guessan,Éric,10/11/2003,9,"1,4",Recalé
+Abena,Amélie,26/05/1997,10,2,En attente
+Owona,André,06/08/2000,18,,Recalé
+Assomo,Alice,12/10/1987,3,,Recalé
+Talla,Désiré,13/07/1985,13,16,Recalé
+Fotso,Rémy,14/10/1992,9,19,En attente
+Ngo,Régis,22/05/1997,14,4,Admis
+Biya,Julie,24/10/2002,14,,Recalé
+Essomba,Céline,17/07/1996,7,"8,5",
+Ateba,Désiré,28/08/1983,14,18,
+Mballa,Théo,13/07/1982,13,17,Admis
+Fouda,Julie,10/08/1993,18,16,Recalé
+Kamga,Aïcha,24/06/1985,,14,Admis
+Biya,Alice,16/01/2002,5,20,En attente
+Abena,Alice,20/04/1985,,12,Admis
+Abena,Joël,26/03/2001,12,"16,1",En attente
+Assomo,Noëlle,04/05/1988,0,6,Admis
+Talla,Désiré,20/08/2000,14,"4,7",Recalé
+Abena,Éric,13/07/1992,19,"1,0",Admis
+Essomba,Bonito,02/10/1991,13,"0,9",Admis
+Zang,François,04/08/1995,4,,Recalé
+M'Bappe,Régis,12/10/1993,15,15,Recalé
+Ngo,Amélie,25/04/1990,,6,Admis
+Ekani,Bonito,25/10/1997,18,,En attente
+Talla,Aïcha,15/04/1989,2,"7,0",Admis
+Abena,Éric,19/08/1988,17,12,Recalé
+Kamga,Estelle,26/06/2000,1,0,Admis
+N'Guessan,Éric,17/12/1997,13,1,Recalé
+Ekani,Aïcha,03/01/2000,5,11,En attente
+Owona,Éric,27/11/1984,2,18,Admis
+Kamga,Joël,14/02/2004,14,14,Recalé
+Ngo,Désiré,25/07/1983,5,13,Recalé
+Nkolo,Rémy,25/03/1985,13,1,En attente
+Fouda,Björn,22/06/1995,17,8,Admis
+Zang,Noëlle,22/05/1996,18,0,En attente
+N'Guessan,Chloé,11/04/1989,,"11,9",
+Nkolo,Régis,08/04/1981,11,5,En attente
+Tchoumi,Éric,09/01/1999,14,,En attente
+Mballa,François,16/12/1987,15,"3,8",En attente
+Zang,André,04/01/1994,14,"3,4",Admis
+Ateba,Julie,07/04/1997,1,4,Recalé
+M'Bappe,Alice,08/01/1999,14,"14,2",Recalé
+Ngo,Éric,09/05/1998,17,,Admis
+Njoya,Amélie,16/01/2000,1,2,Admis
+N'Guessan,Régis,25/04/2003,0,15,En attente
+Tchoumi,Rémy,08/03/1997,10,8,Admis
+Njoya,André,11/06/1981,8,,Recalé
+M'Bappe,Léa,05/10/1982,4,10,Admis
+Owona,Joël,11/05/2002,11,10,
+Njoya,Théo,25/01/1980,10,"14,0",En attente
+Ekani,Régis,22/11/1987,6,,Recalé
+Kamga,Amélie,19/10/1992,14,12,Admis
+Assomo,François,23/08/1997,5,15,Recalé
+Ateba,Joël,05/09/1997,13,"9,2",Admis
+Njoya,Théo,09/11/2000,4,0,Admis
+Talla,André,05/03/1983,4,12,Admis
+Ngo,Joël,06/12/2002,5,8,
+Ateba,Rémy,17/01/1991,0,13,Admis
+Essomba,Björn,06/09/1994,8,0,Admis
+Abena,Julie,08/05/1987,7,7,En attente
+Talla,Joël,03/12/1992,17,"3,2",Admis
+N'Guessan,Léa,28/03/1989,13,"4,8",Recalé
+Ateba,Amélie,03/01/1993,2,"3,0",En attente
+Talla,Théo,16/03/1997,19,4,Recalé
+Mballa,Désiré,21/03/1996,1,"9,0",Admis
+Abena,François,10/05/1997,18,7,Recalé
+Sadjo,Julie,01/04/1998,10,1,Recalé
+Ngo,Alice,01/11/2003,12,2,Recalé
+Assomo,Rémy,27/09/1998,5,12,En attente
+"  NKOLO  ",régis,21/05/1983,1,"2,8",Recalé
+"  ASSOMO  ",alice,09/06/1997,14,17,En attente
+"  FOTSO  ",alice,05/09/1985,10,4,En attente

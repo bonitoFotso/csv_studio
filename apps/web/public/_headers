@@ -1,0 +1,30 @@
+# Préparation au déploiement (convention _headers de Cloudflare, Pages comme Workers Assets) —
+# écrit et committé cette nuit mais jamais appliqué (aucun déploiement n'a eu lieu). Copié tel quel
+# dans dist/ par Vite (fichier statique de apps/web/public/), à la racine du répertoire servi.
+
+# Assets hashés par Vite (assets/*-<hash>.js/.css) : le contenu ne change jamais sans que le nom de
+# fichier change aussi, donc la mise en cache la plus longue possible est sans risque.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# index.html référence les assets hashés du jour : jamais de cache, pour qu'un nouveau déploiement
+# soit visible immédiatement au prochain chargement plutôt que de servir une version périmée qui
+# pointerait vers des assets hashés qui n'existent peut-être plus.
+/index.html
+  Cache-Control: no-cache
+
+# CSP stricte : la promesse centrale du projet (aucune donnée envoyée nulle part) tient toujours,
+# mais connect-src ne peut pas rester 'none' une fois le bouton d'export PDF câblé — @react-pdf/
+# renderer charge la police embarquée par fetch() côté navigateur (il a besoin des octets bruts du
+# fichier pour l'incorporer dans le PDF, pas juste d'une règle CSS @font-face). Ce fetch reste
+# strictement same-origin (l'app relit son propre asset du bundle, servi par le même domaine) —
+# 'self' l'autorise sans ouvrir la moindre connexion vers un tiers. worker-src 'self' est
+# nécessaire au Web Worker (apps/web/src/worker/) dont dépend tout le rejeu de pipeline sans geler
+# l'UI. style-src inclut 'unsafe-inline' car plusieurs composants posent une largeur/pourcentage en
+# style inline React (barre de progression, largeur de colonne TanStack Table) — pas de script
+# inline, pas d'eval (l'évaluateur d'expression du moteur est un arbre restreint, jamais un eval()
+# de texte libre).
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; worker-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: same-origin

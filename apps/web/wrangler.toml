@@ -1,0 +1,16 @@
+# Préparation au déploiement (Cloudflare Workers, assets statiques) — écrit et committé cette
+# nuit mais jamais exécuté ni appliqué (règle absolue de la session NIGHT_RUN : pas de déploiement,
+# pas d'appel MCP Cloudflare). `wrangler deploy` n'a jamais été lancé depuis ce fichier.
+#
+# `directory` pointe vers le build de production d'apps/web (`bun run build`, qui produit
+# apps/web/dist/) — ce fichier est donc conçu pour être utilisé avec `wrangler` exécuté depuis
+# apps/web/, après un build.
+name = "csv-studio"
+compatibility_date = "2026-07-30"
+
+[assets]
+directory = "./dist"
+# Route absente du bundle (ex. /candidats/42) : sert index.html plutôt qu'un 404 brut — nécessaire
+# pour une SPA qui gère elle-même sa navigation, si un routeur d'URL est ajouté plus tard
+# (aujourd'hui l'app n'a qu'une seule vue, mais ce réglage est sans effet négatif en attendant).
+not_found_handling = "single-page-application"
