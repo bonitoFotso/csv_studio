@@ -1,0 +1,198 @@
+{
+  "formatVersion": 1,
+  "kind": "report",
+  "title": "Rapport de session — Formation professionnelle",
+  "subtitle": "Session de juillet 2026 · Bilan des candidats",
+  "expectedColumns": [
+    "nom",
+    "prenom",
+    "date_naissance",
+    "nb_presences",
+    "note",
+    "decision"
+  ],
+  "blocks": [
+    {
+      "type": "text",
+      "content": "Ce rapport résume les résultats de la session de formation de juillet 2026. Les candidats ont été évalués sur leur assiduité (nombre de présences) et leur note finale. Les doublons de saisie (candidats inscrits plusieurs fois) ont été fusionnés avant analyse."
+    },
+    {
+      "type": "kpi_row",
+      "items": [
+        {
+          "label": "Candidats (après dédoublonnage)",
+          "agg": {
+            "fn": "count"
+          }
+        },
+        {
+          "label": "Note moyenne",
+          "agg": {
+            "fn": "avg",
+            "column": "note"
+          }
+        },
+        {
+          "label": "Présences moyennes",
+          "agg": {
+            "fn": "avg",
+            "column": "nb_presences"
+          }
+        },
+        {
+          "label": "Notes renseignées",
+          "agg": {
+            "fn": "countNonEmpty",
+            "column": "note"
+          }
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "chartType": "bar",
+      "title": "Répartition des décisions",
+      "summarize": {
+        "groupBy": [
+          {
+            "column": "decision",
+            "normalization": "text"
+          }
+        ],
+        "aggregates": [
+          {
+            "fn": "count",
+            "asName": "effectif"
+          }
+        ]
+      },
+      "x": "decision",
+      "series": [
+        {
+          "column": "effectif",
+          "label": "Candidats"
+        }
+      ],
+      "caption": "Les décisions vides (non encore statuées) apparaissent comme une catégorie à part."
+    },
+    {
+      "type": "chart",
+      "chartType": "histogram",
+      "title": "Distribution des notes",
+      "summarize": {
+        "groupBy": [
+          {
+            "column": "note",
+            "normalization": "raw",
+            "binning": {
+              "kind": "explicit_boundaries",
+              "boundaries": [
+                0,
+                8,
+                10,
+                12,
+                14,
+                16,
+                20
+              ]
+            }
+          }
+        ],
+        "aggregates": [
+          {
+            "fn": "count",
+            "asName": "effectif"
+          }
+        ]
+      },
+      "x": "note",
+      "series": [
+        {
+          "column": "effectif",
+          "label": "Candidats"
+        }
+      ],
+      "caption": "Tranches de notes sur 20, y compris les tranches vides et les valeurs non renseignées."
+    },
+    {
+      "type": "chart",
+      "chartType": "donut",
+      "title": "Part de candidats ayant assisté à au moins 10 séances",
+      "summarize": {
+        "groupBy": [
+          {
+            "column": "nb_presences",
+            "normalization": "raw",
+            "binning": {
+              "kind": "explicit_boundaries",
+              "boundaries": [
+                0,
+                10,
+                21
+              ]
+            }
+          }
+        ],
+        "aggregates": [
+          {
+            "fn": "count",
+            "asName": "effectif"
+          }
+        ]
+      },
+      "x": "nb_presences",
+      "series": [
+        {
+          "column": "effectif"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Candidats recalés — à recontacter",
+      "columns": [
+        "nom",
+        "prenom",
+        "date_naissance",
+        "note"
+      ],
+      "filter": {
+        "kind": "group",
+        "operator": "and",
+        "conditions": [
+          {
+            "kind": "condition",
+            "columnId": "decision",
+            "operator": "eq",
+            "value": "Recalé"
+          }
+        ]
+      },
+      "maxRows": 50
+    },
+    {
+      "type": "page_break"
+    },
+    {
+      "type": "table",
+      "title": "Candidats sans note renseignée — à traiter en priorité",
+      "columns": [
+        "nom",
+        "prenom",
+        "decision"
+      ],
+      "filter": {
+        "kind": "group",
+        "operator": "and",
+        "conditions": [
+          {
+            "kind": "condition",
+            "columnId": "note",
+            "operator": "is_empty"
+          }
+        ]
+      },
+      "maxRows": 100
+    }
+  ]
+}
