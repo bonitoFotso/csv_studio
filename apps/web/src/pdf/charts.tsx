@@ -2,7 +2,7 @@ import * as React from 'react';
 import { ClipPath, Defs, G, Line, Path, Rect, Svg, Text } from '@react-pdf/renderer';
 import { computeBarChartGeometry, computeLineChartGeometry, computePieChartGeometry } from './reportGeometry.ts';
 import type { ComputedChartBlock } from '@csv-studio/core/engine/reportSpecCompute.ts';
-import { REPORT_FONT_FAMILY } from './fonts.ts';
+import { REPORT_FONT_FAMILY } from './fontFamily.ts';
 
 // Palette à luminance clairement échelonnée (reste distinguable convertie en niveaux de gris) +
 // un motif de hachures par série au-delà de la première, pour ne jamais dépendre de la seule

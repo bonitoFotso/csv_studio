@@ -11,8 +11,9 @@
 // changement local le jour venu.
 import { fileURLToPath } from 'node:url';
 import { Font } from '@react-pdf/renderer';
+import { REPORT_FONT_FAMILY } from './fontFamily.ts';
 
-export const REPORT_FONT_FAMILY = 'Liberation Sans';
+export { REPORT_FONT_FAMILY };
 
 function fontPath(fileName: string): string {
   return fileURLToPath(new URL(`./fonts/${fileName}`, import.meta.url));
