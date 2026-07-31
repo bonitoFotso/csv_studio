@@ -60,6 +60,9 @@ export interface OperationReport {
   rowsModified: number;
   unmatched?: number;
   ambiguous?: number;
+  /** Rapprochement (`enrich_join`) uniquement : décompte structuré, pour la traçabilité PDF — jamais reconstruit depuis `notes` (texte libre, pas une source de vérité). */
+  matchedAuto?: number;
+  matchedManual?: number;
   notes: string[];
   affectedRowIds?: RowId[];
 }

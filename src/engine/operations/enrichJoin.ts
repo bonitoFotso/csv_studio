@@ -114,6 +114,8 @@ function applyExact(table: Table, rightTable: Table, params: EnrichJoinParams) {
       rowsRemoved: params.joinType === 'inner' ? table.rows.length - rows.length : 0,
       unmatched,
       ambiguous,
+      matchedAuto: results.length - unmatched,
+      matchedManual: 0,
       notes: [`${results.length - unmatched} ligne(s) appariée(s), ${unmatched} non appariée(s), ${ambiguous} ambiguë(s) (plusieurs correspondances à droite)`],
     }),
   };
@@ -151,6 +153,8 @@ function applyFuzzy(table: Table, rightTable: Table, params: EnrichJoinParams) {
       rowsRemoved: params.joinType === 'inner' ? table.rows.length - rows.length : 0,
       unmatched,
       ambiguous: resolution.pending.length,
+      matchedAuto: resolution.matches.size - manualCount,
+      matchedManual: manualCount,
       notes: [
         `${resolution.matches.size} ligne(s) appariée(s) (dont ${manualCount} validée(s) manuellement), ${unmatched} non appariée(s)`,
         `${resolution.pending.length} en attente de validation, ${resolution.rejectedCount} rejetée(s) (score ou décision manuelle)`,

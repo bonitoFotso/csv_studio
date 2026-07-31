@@ -46,6 +46,9 @@ describe('enrich_join (exact)', () => {
     expect(out.rows.map((r) => r.cells[col.id])).toEqual(['10', '8', '']);
     expect(report.unmatched).toBe(1);
     expect(report.ambiguous).toBe(0);
+    // Décomptes structurés pour la traçabilité PDF (jamais reconstruits depuis `notes`).
+    expect(report.matchedAuto).toBe(2);
+    expect(report.matchedManual).toBe(0);
   });
 
   it('jointure inner : ne garde que les lignes appariées', () => {
@@ -197,6 +200,8 @@ describe('enrich_join (exact)', () => {
     const col = after.table.columns.find((c) => c.name === 'nb_presences')!;
     expect(after.table.rows[0].cells[col.id]).toBe('7');
     expect(after.report.ambiguous).toBe(0);
+    expect(after.report.matchedAuto).toBe(0);
+    expect(after.report.matchedManual).toBe(1);
   });
 
   it('toPortable/rebind : round-trip exact avec un second fichier', () => {

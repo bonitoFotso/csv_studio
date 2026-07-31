@@ -8,6 +8,8 @@ export function makeReport(partial: {
   rowsModified?: number;
   unmatched?: number;
   ambiguous?: number;
+  matchedAuto?: number;
+  matchedManual?: number;
   notes?: string[];
   affectedRowIds?: RowId[];
 }): OperationReport {
@@ -19,6 +21,8 @@ export function makeReport(partial: {
     rowsModified: partial.rowsModified ?? 0,
     unmatched: partial.unmatched,
     ambiguous: partial.ambiguous,
+    matchedAuto: partial.matchedAuto,
+    matchedManual: partial.matchedManual,
     notes: partial.notes ?? [],
     affectedRowIds: partial.affectedRowIds,
   };
