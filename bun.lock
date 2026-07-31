@@ -4,7 +4,30 @@
   "workspaces": {
     "": {
       "name": "csv_studio",
+      "devDependencies": {
+        "@types/node": "^24.13.2",
+        "@vitest/ui": "^4.1.10",
+        "oxlint": "^1.71.0",
+        "typescript": "~6.0.2",
+        "vitest": "^4.1.10",
+      },
+    },
+    "apps/mcp": {
+      "name": "@csv-studio/mcp",
+      "version": "0.0.0",
       "dependencies": {
+        "@csv-studio/core": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/node": "^24.13.2",
+        "typescript": "~6.0.2",
+      },
+    },
+    "apps/web": {
+      "name": "@csv-studio/web",
+      "version": "0.0.0",
+      "dependencies": {
+        "@csv-studio/core": "workspace:*",
         "@react-pdf/renderer": "^4.5.1",
         "@tanstack/react-table": "^8.21.3",
         "@tanstack/react-virtual": "^3.14.9",
@@ -31,13 +54,22 @@
         "@types/react": "^19.2.17",
         "@types/react-dom": "^19.2.3",
         "@vitejs/plugin-react": "^6.0.3",
-        "@vitest/ui": "^4.1.10",
         "babel-plugin-react-compiler": "^1.0.0",
-        "oxlint": "^1.71.0",
         "tailwindcss": "^4.3.3",
         "typescript": "~6.0.2",
         "vite": "^8.1.1",
-        "vitest": "^4.1.10",
+      },
+    },
+    "packages/core": {
+      "name": "@csv-studio/core",
+      "version": "0.0.0",
+      "dependencies": {
+        "papaparse": "^5.5.4",
+      },
+      "devDependencies": {
+        "@types/node": "^24.13.2",
+        "@types/papaparse": "^5.5.2",
+        "typescript": "~6.0.2",
       },
     },
   },
@@ -75,6 +107,12 @@
     "@babel/traverse": ["@babel/traverse@7.29.7", "", { "dependencies": { "@babel/code-frame": "^7.29.7", "@babel/generator": "^7.29.7", "@babel/helper-globals": "^7.29.7", "@babel/parser": "^7.29.7", "@babel/template": "^7.29.7", "@babel/types": "^7.29.7", "debug": "^4.3.1" } }, "sha512-EhlfNQtZ+NK22w5BM61ciuiq1m58ed33Wr1Xan//ZRTy6hgjnwyCffRYwzsGXdASJSUJ1guZILsErh1eQcl+zw=="],
 
     "@babel/types": ["@babel/types@7.29.7", "", { "dependencies": { "@babel/helper-string-parser": "^7.29.7", "@babel/helper-validator-identifier": "^7.29.7" } }, "sha512-4zBIxpPzowiZpusoFkyGVwakdRJUyuH5PxQ/PrqghfdFWWasvnCdPfQXHrenDai+gyLARulZjZowCOj6fjT4pA=="],
+
+    "@csv-studio/core": ["@csv-studio/core@workspace:packages/core"],
+
+    "@csv-studio/mcp": ["@csv-studio/mcp@workspace:apps/mcp"],
+
+    "@csv-studio/web": ["@csv-studio/web@workspace:apps/web"],
 
     "@emnapi/core": ["@emnapi/core@2.0.0-alpha.3", "", { "dependencies": { "@emnapi/wasi-threads": "2.0.1", "tslib": "^2.4.0" } }, "sha512-AZypUeJ/yByuxyS7BlSNRDOMLMlROYtjYdIAuBmJssVz1UJDSeYxLrdizhXCFYhedC5bqd/ASy8EuNXbVVXp9g=="],
 
