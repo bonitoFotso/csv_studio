@@ -582,3 +582,111 @@ Doutes pour Bonito :
 
 ---
 
+## Phase 7 — Performance
+Branche : night/7-performance (part de night/6-mcp)
+Statut : terminée (2 des 4 optimisations demandées faites, 1 tentée puis retirée après mesure,
+1 sans objet pour l'instant — détail ci-dessous)
+Commits : e0d1a7a, c2e0817, 8d1dfcd
+Fait :
+- **Écritures Dexie débouncées et différentielles** (l'optimisation la plus concrète de cette
+  phase). `apps/web/src/state/workspace.tsx` réécrivait **tous** les onglets ouverts (table source
+  + pipeline complets) à chaque dispatch du reducer, y compris ceux qui n'avaient pas changé —
+  parce que `state.entries` change de référence sur *tout* dispatch (pattern reducer immutable
+  standard), et l'effet de persistance en dépendait directement sans aucune comparaison de contenu
+  ni de debounce.
+  - Extrait la logique de synchronisation dans `apps/web/src/state/persistWorkspace.ts`
+    (`syncWorkspaceEntries`) : pure, sans React ni IndexedDB, donc testable comme le reste du
+    moteur — ce projet n'a pas d'infrastructure de test UI, mais rien n'empêchait cette logique
+    précise d'en avoir une. 7 tests (première écriture, non-réécriture d'une entrée inchangée,
+    réécriture sélective d'un seul onglet parmi plusieurs, suppression, nettoyage du suivi,
+    ordre correct passé à `save`).
+  - Ajouté une debounce de 500 ms côté effet React : plusieurs dispatches rapprochés (ex. une
+    frappe qui modifie un paramètre de pipeline) ne déclenchent qu'un seul flush, après une pause.
+  - Un vidage immédiat (non débouncé) est branché sur l'événement `pagehide` pour ne jamais perdre
+    la dernière modification si elle tombe dans la fenêtre de la debounce — la garantie « le
+    travail survit à la fermeture de l'onglet », déjà annoncée dans le tout premier paragraphe du
+    README, n'est pas affaiblie par cette optimisation.
+  - **Mesuré**, pas estimé : `apps/web/scripts/measurePersistence.ts` construit une vraie table de
+    50 000 lignes × 25 colonnes (via `createTableFromRows`, le même code que l'app), simule 3
+    onglets ouverts et 10 modifications rapprochées sur un seul d'entre eux, et compare l'ancien
+    comportement (une réécriture complète de tout à chaque dispatch) au nouveau
+    (`syncWorkspaceEntries` appelé une seule fois après le flush) :
+    - Avant : **30 écritures** Dexie déclenchées, **~2168 Mo** sérialisés au total.
+    - Après : **1 écriture**, **~72 Mo** sérialisés.
+    - **97 % d'écritures et de volume en moins** sur ce scénario précis. Chiffres reproductibles
+      (`bun run apps/web/scripts/measurePersistence.ts`) et notés dans le README comme demandé.
+- **Chargement paresseux du moteur de rapprochement flou : tenté, mesuré comme inefficace, retiré.**
+  J'ai converti l'import de `resolveFuzzyMatchesChunked` dans `engine.worker.ts` en `import()`
+  dynamique, en ajoutant aussi `worker: { format: 'es' }` à `vite.config.ts` (le format par défaut
+  IIFE ne permet aucun découpage en chunks). Au rebuild, **Vite a lui-même signalé l'import comme
+  inefficace** (`INEFFECTIVE_DYNAMIC_IMPORT`) : `fuzzyJoin.ts` est déjà importé de façon statique
+  par `enrichJoin.ts` (l'opération `enrich_join`, toujours enregistrée par
+  `registerAllOperations()`, appelée aussi bien dans le Worker que côté thread principal pour
+  `toPortable`/`rebind`) — l'`import()` ne bougeait donc rien, il ajoutait seulement l'overhead du
+  helper d'import dynamique (chunk du Worker passé de 29,58 à 30,31 Ko, dans le mauvais sens).
+  J'ai **annulé les deux changements** (`git checkout --` sur les deux fichiers, rien commité) une
+  fois la mesure faite, plutôt que de laisser un code mort ou contre-productif. Documenté comme
+  piège dans `CLAUDE.md` : un `import()` ne déplace un module dans un chunk séparé que si *aucun*
+  autre point d'entrée du même graphe ne l'importe déjà de façon statique.
+- **Chargement paresseux de l'export PDF / de la couche graphique : sans objet.** Vérifié par
+  recherche exhaustive (`grep`) : rien dans `apps/web/src` en dehors de `pdf/` lui-même n'importe
+  `pdf/` — ni `App.tsx`, ni aucun composant. Le bundle actuel ne contient déjà pas ce code (il
+  n'est atteignable que depuis `apps/web/scripts/generateSamples.ts`, un script Node séparé) : il
+  n'y a rien à rendre paresseux tant que le bouton d'export PDF n'existe pas dans l'UI — exclu du
+  périmètre de cette nuit de toute façon.
+- Vérifié à l'exécution, pas seulement au build : serveur de dev Vite relancé après le changement
+  de persistance, page et module `workspace.tsx` servis sans erreur (200, code de
+  `syncWorkspaceEntries` bien présent dans le module transformé).
+- 278 tests au total (7 nouveaux), tous verts. `bun run build` vert, taille du bundle principal
+  quasi inchangée (592,22 Ko contre 591,77 Ko avant — la différence vient uniquement du nouveau
+  code de `persistWorkspace.ts`, pas d'une régression). `oxlint` : un nouvel avertissement
+  `exhaustive-deps` introduit par mon premier essai (l'effet référençait `state` en entier sans le
+  lister en dépendance) — corrigé avant de committer en ne référençant que `state.entries`/
+  `state.order` explicitement à l'intérieur de l'effet, pas `state` lui-même.
+- README.md (nouvelle section « Performance » avec les chiffres) et CLAUDE.md (nouveau piège
+  documenté) mis à jour.
+
+Pas fait / à vérifier :
+- **Table résidant dans le Worker** et **stockage colonnaire dans `packages/core`** : explicitement
+  hors périmètre de cette nuit (consigne NIGHT_RUN : « trop invasif pour un travail sans
+  supervision, on le fera ensemble »). Ce sont, de loin, les deux optimisations avec le plus gros
+  potentiel de gain sur un très gros fichier — notées comme prochaine étape naturelle une fois que
+  tu pourras valider l'approche en direct.
+- **Streaming du parsing CSV avec avancement réel** (item de la liste originale du prompt) : pas
+  fait, et pas explicitement redemandé dans le découpage propre à cette phase de NIGHT_RUN
+  (qui ne listait que les imports dynamiques et les écritures Dexie) — je l'ai donc traité comme
+  hors du périmètre resserré de cette phase précise, pas oublié par erreur. Question que je t'aurais
+  posée : veux-tu que je le fasse quand même avant de passer à la phase 8, ou le regrouper avec la
+  table-dans-le-Worker (les deux touchent à la façon dont un gros fichier entre dans l'app) ?
+- Pas de mesure de la taille du bundle "avant/après" pour les deux items sans effet réel (fuzzy
+  matching, PDF) au-delà de ce qui est déjà noté ci-dessus — il n'y avait rien de plus à mesurer
+  une fois la conclusion "inefficace"/"sans objet" établie.
+
+Décisions prises faute de pouvoir demander :
+- **Annuler plutôt que garder un `import()` inefficace.** Une fois Vite lui-même ayant signalé que
+  l'import dynamique ne changeait rien, j'ai choisi de revenir en arrière proprement (revert des
+  deux fichiers touchés) plutôt que de laisser un changement sans bénéfice réel (et légèrement
+  négatif : +0,73 Ko sur le chunk Worker) trainer dans le code sous prétexte qu'il avait été
+  "tenté". Cohérent avec l'esprit de la consigne de mesurer avant/après : une mesure qui montre
+  l'absence de gain est un résultat légitime, pas un échec à cacher.
+- **Fenêtre de debounce à 500 ms**, choisie sans repère explicite dans le prompt — assez courte
+  pour qu'une pause naturelle dans la saisie (relâcher le clavier, changer de champ) déclenche
+  l'écriture rapidement, assez longue pour absorber une rafale de dispatches rapprochés (plusieurs
+  re-rendus déclenchés par une même interaction). Facile à ajuster (`PERSIST_DEBOUNCE_MS` dans
+  `workspace.tsx`) si tu observes en usage réel qu'elle est trop courte ou trop longue.
+- **`pagehide` plutôt que `beforeunload`** pour le vidage de sécurité à la fermeture de l'onglet —
+  `pagehide` est la recommandation actuelle (compatible avec le cache arrière/avant du navigateur,
+  fonctionne aussi sur mobile Safari où `beforeunload` est peu fiable), `beforeunload` a en plus
+  tendance à bloquer certaines optimisations de navigation du navigateur.
+
+Doutes pour Bonito :
+- Le streaming CSV (ci-dessus) : dis-moi si tu le veux maintenant ou plus tard, groupé avec le
+  travail Worker/colonnaire.
+- Aucun outil de mesure de performance "en conditions réelles" (profileur navigateur, Lighthouse)
+  n'a été utilisé cette nuit — uniquement des mesures ciblées sur le code exact qui a changé
+  (nombre d'appels, volume sérialisé). Si tu veux un profil plus large (temps de rendu de la
+  grille, temps de rejeu du pipeline sur un vrai fichier de 50 000 lignes dans un vrai navigateur),
+  ce sera à faire avec toi, avec de vrais outils de profilage ouverts pendant l'usage.
+
+---
+
