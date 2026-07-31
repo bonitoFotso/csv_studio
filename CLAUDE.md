@@ -26,15 +26,15 @@ changement terminé — le projet n'a pas de CI, ces deux commandes en tiennent 
 - Aucun nom de colonne codé en dur, nulle part — y compris dans les gabarits de rapport à venir.
 - Aucune requête réseau dans le code de l'app (la CSP de prod interdira `connect-src`).
 - Le `Pipeline` est rejouable/désactivable/annulable étape par étape via `replay()`, qui tourne
-  dans le Worker (`src/worker/engine.worker.ts`) — jamais sur le thread principal pour une table
+  dans le Worker (`apps/web/src/worker/engine.worker.ts`) — jamais sur le thread principal pour une table
   de taille réelle.
 
 ## Ajouter une opération au moteur
 
-Chaque opération vit dans `src/engine/operations/<nom>.ts` et exporte un `OperationDefinition`
+Chaque opération vit dans `packages/core/src/engine/operations/<nom>.ts` et exporte un `OperationDefinition`
 avec quatre membres : `type`, `apply(table, params, ctx)`, `toPortable(params, tableBeforeStep, ctx)`,
-`rebind(portableParams, nameToId, ctx?)`. L'enregistrer dans `src/engine/operations/index.ts`
-(`registerAllOperations`) et ajouter son type à `OperationType` dans `src/engine/types.ts`.
+`rebind(portableParams, nameToId, ctx?)`. L'enregistrer dans `packages/core/src/engine/operations/index.ts`
+(`registerAllOperations`) et ajouter son type à `OperationType` dans `packages/core/src/engine/types.ts`.
 
 Si l'opération référence un second fichier (comme `enrich_join` ou `append_rows`), utiliser le
 mécanisme `secondary` de `PortableParams`/`RebindContext` plutôt que d'en inventer un nouveau —
@@ -56,7 +56,7 @@ Un test qui échoue ne se contourne jamais en le désactivant ou en assouplissan
 
 ## ReportSpec — format de rapport (moteur en place, pas encore d'UI)
 
-`src/engine/reportSpec.ts` (types), `reportSpecValidate.ts` (validation stricte, erreurs avec
+`packages/core/src/engine/reportSpec.ts` (types), `reportSpecValidate.ts` (validation stricte, erreurs avec
 chemin JSON précis), `reportSpecCompute.ts` (calcul des blocs contre une table + un remappage).
 C'est une **sœur de `Recipe`**, pas un système parallèle : même mécanisme de remappage par nom
 (`suggestColumnMapping`/`mappingIsComplete`/`buildNameToId`, exportées de `recipe.ts` et
@@ -71,14 +71,14 @@ Un bloc `chart` ne recalcule jamais rien : son champ `summarize` est résolu (no
 puis passé directement à `computeSummarizeTable` — l'unique implémentation de l'agrégation dans
 tout le projet, partagée avec l'opération `summarize` du pipeline et l'export PDF.
 
-## Export PDF (`src/pdf/`)
+## Export PDF (`apps/web/src/pdf/`)
 
 - `reportGeometry.ts` : la seule couche qui calcule des positions de barres/points de ligne/parts
   de camembert (via `d3-scale`/`d3-shape`), **sans aucune dépendance au DOM**. Le futur aperçu
   écran devra consommer cette même couche plutôt que recalculer sa propre géométrie — un écart
   entre l'aperçu et le PDF exporté serait un bug ici, nulle part ailleurs.
 - `charts.tsx` : traduit cette géométrie en primitives `@react-pdf/renderer` (`Svg`/`Path`/`Rect`/`Line`).
-- `fonts.ts` : police Liberation Sans embarquée depuis `src/pdf/fonts/*.ttf` (copiée du paquet
+- `fonts.ts` : police Liberation Sans embarquée depuis `apps/web/src/pdf/fonts/*.ttf` (copiée du paquet
   système `fonts-liberation`, licence SIL OFL, voir `LICENSE-liberation-fonts.txt`) — jamais une
   URL. Un export PDF déclenché depuis le navigateur (une fois l'éditeur de rapport câblé) devra
   changer cette résolution vers une URL d'asset Vite du même bundle, pas un chemin disque.
@@ -90,34 +90,62 @@ tout le projet, partagée avec l'opération `summarize` du pipeline et l'export 
   depuis l'UI (l'éditeur de rapport n'existe pas encore) — utilisé pour l'instant par les tests et
   par le script qui génère `samples/*.pdf`.
 
-## Livrables de démonstration (`scripts/`, `samples/`)
+## Livrables de démonstration (`apps/web/scripts/`, `samples/`)
 
-- `scripts/generateSyntheticDataset.ts` : `generateSyntheticCandidates(count, seed)` — jeu de
-  données reproductible (mulberry32) à graine fixe, avec accents, valeurs manquantes, virgule
-  décimale française, et doublons volontaires exacts/quasi-exacts. `CandidateRow` a une signature
-  d'index (`[key: string]: string`) en plus de ses champs nommés, pour rester assignable partout où
-  le code générique attend un `Record<string, string>` (écriture CSV, construction de `Table`) sans
-  cast à chaque site d'appel.
-- `scripts/generateSamples.ts` : orchestration bout en bout — génère le jeu de données, l'écrit en
-  CSV, le fait passer par un vrai pipeline (`replay`), calcule un `ReportSpec` de démonstration
-  dessus, et écrit les 4 fichiers dans `samples/`. Exécuter avec `bun run scripts/generateSamples.ts`
-  après toute modification du moteur d'agrégation/rapport/PDF pour vérifier que les livrables
-  restent cohérents.
-- `tsconfig.scripts.json` : config Node dédiée (`types: ["node"]`, `include: ["scripts"]` seulement)
-  pour typechecker `scripts/` — `tsconfig.app.json` ne le couvre pas (`include: ["src"]`), et lui
-  ajouter `src` en entier ferait remonter de fausses erreurs sur des fichiers navigateur (`main.tsx`
-  et son import CSS) qui ont besoin des types `vite/client` que cette config n'a pas.
-- `vitest.config.ts` inclut `scripts/**/*.test.ts` en plus de `src/**/*.test.ts`.
+- `apps/web/scripts/generateSyntheticDataset.ts` : `generateSyntheticCandidates(count, seed)` —
+  jeu de données reproductible (mulberry32) à graine fixe, avec accents, valeurs manquantes,
+  virgule décimale française, et doublons volontaires exacts/quasi-exacts. `CandidateRow` a une
+  signature d'index (`[key: string]: string`) en plus de ses champs nommés, pour rester assignable
+  partout où le code générique attend un `Record<string, string>` (écriture CSV, construction de
+  `Table`) sans cast à chaque site d'appel.
+- `apps/web/scripts/generateSamples.ts` : orchestration bout en bout — génère le jeu de données,
+  l'écrit en CSV, le fait passer par un vrai pipeline (`replay`), calcule un `ReportSpec` de
+  démonstration dessus, et écrit les 4 fichiers dans `samples/` (à la racine du dépôt, deux niveaux
+  au-dessus du script). Exécuter avec `bun run samples` (racine) après toute modification du moteur
+  d'agrégation/rapport/PDF pour vérifier que les livrables restent cohérents. Les deux PDF
+  contiennent un horodatage réel (`generatedAt: new Date().toISOString()` dans `traceability.ts`) :
+  les régénérer produit un diff binaire attendu même sans changement de comportement, le CSV et le
+  JSON eux restent strictement identiques d'une régénération à l'autre (jeu de données à graine fixe).
+- `apps/web/tsconfig.scripts.json` : config Node dédiée (`types: ["node"]`, `include: ["scripts"]`
+  seulement) pour typechecker `apps/web/scripts/` — `tsconfig.app.json` ne le couvre pas
+  (`include: ["src"]`), et lui ajouter `src` en entier ferait remonter de fausses erreurs sur des
+  fichiers navigateur (`main.tsx` et son import CSS) qui ont besoin des types `vite/client` que
+  cette config n'a pas.
+- `vitest.config.ts` (racine) inclut `apps/*/scripts/**/*.test.ts` en plus des tests de `packages/*/src`
+  et `apps/*/src`.
+
+## Monorepo (workspaces Bun)
+
+```
+packages/core/    @csv-studio/core — le moteur, TypeScript pur, aucune dépendance React/DOM/navigateur
+apps/web/         @csv-studio/web — l'app actuelle, consomme @csv-studio/core
+apps/mcp/         @csv-studio/mcp — serveur MCP stdio (squelette ; implémentation à une phase suivante)
+```
+
+Mis en place à la phase 5 de la session NIGHT_RUN (voir `NIGHT_LOG.md`) : le moteur a été déplacé
+tel quel dans `packages/core/src/engine/` (aucun fichier de test moteur modifié — seuls les chemins
+d'import des *consommateurs* dans `apps/web` ont changé, de `@/engine/...` vers
+`@csv-studio/core/engine/...`). `packages/core` expose aussi `csv.ts` (parsing/génération CSV sans
+DOM — `parseCsvFile`, qui a besoin de l'objet `File` du navigateur, reste côté `apps/web/src/lib/csv.ts`
+en fine enveloppe autour de `parseCsvText` du core) et `report.ts` (texte de rapport de pipeline).
+`apps/web/src/pdf/` (export PDF) reste côté web : rien dans `apps/mcp` n'a besoin de générer un PDF
+(`build_report` renverra des agrégats calculés, pas un fichier). Résolution entre workspaces via les
+symlinks `node_modules/@csv-studio/*` posés par `bun install` et la carte `exports` de
+`packages/core/package.json` (`"./*": "./src/*"`, imports profonds avec extension `.ts` explicite —
+mêmes conventions `moduleResolution: bundler` partout).
 
 ## Structure
 
 ```
-src/engine/          moteur pur (TypeScript, pas de DOM/React) — types, registre, replay, opérations
-src/engine/operations/  une opération = un fichier
-src/worker/           protocole + client + Worker (replay, doublons, rapprochement tournent ici)
-src/components/       UI React, un dossier par fonctionnalité (columns/, filters/, join/, duplicates/, recipes/, append/, summarize/)
-src/state/workspace.tsx  état global (React context + reducer), persistance Dexie
-src/persistence/db.ts    schéma Dexie
+packages/core/src/engine/          moteur pur — types, registre, replay, opérations
+packages/core/src/engine/operations/  une opération = un fichier
+packages/core/src/csv.ts, report.ts   parsing CSV et texte de rapport, sans DOM
+apps/web/src/worker/           protocole + client + Worker (replay, doublons, rapprochement tournent ici)
+apps/web/src/pdf/              export PDF (géométrie, polices, traçabilité, rendu react-pdf)
+apps/web/src/components/       UI React, un dossier par fonctionnalité (columns/, filters/, join/, duplicates/, recipes/, append/, summarize/)
+apps/web/src/state/workspace.tsx  état global (React context + reducer), persistance Dexie
+apps/web/src/persistence/db.ts    schéma Dexie
+apps/mcp/src/                  serveur MCP (squelette)
 ```
 
 ## Session NIGHT_RUN (agrégation, rapports PDF, monorepo, MCP)
