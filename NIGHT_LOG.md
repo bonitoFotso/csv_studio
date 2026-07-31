@@ -234,3 +234,118 @@ Doutes pour Bonito :
 
 ---
 
+## Phase 4 — Livrables de démonstration (« le livrable le plus important de la nuit »)
+Branche : night/4-samples (part de night/3-pdf)
+Statut : terminée
+Commits : 3289a6c, bcab9cd, 5464417, e91c1ef, 17e303a
+Fait :
+- `scripts/generateSyntheticDataset.ts` : `generateSyntheticCandidates(count=500, seed=42)` —
+  générateur pseudo-aléatoire à graine fixe (mulberry32, aucune dépendance ajoutée), colonnes
+  `nom`/`prenom`/`date_naissance`/`nb_presences`/`note`/`decision`, ~6-8 % de valeurs manquantes
+  par colonne concernée, ~30 % des notes en virgule décimale française, noms/prénoms puisés dans
+  des listes avec accents et apostrophes (Éric, N'Guessan, M'Bappe…), 4 doublons exacts et 3
+  quasi-doublons (casse/espaces) injectés à des index fixes pour donner un vrai cas d'usage au
+  dédoublonnage. 6 tests.
+- `scripts/generateSamples.ts` : script d'orchestration bout en bout, exécuté avec succès
+  (`bun run scripts/generateSamples.ts`) :
+  1. génère 500 candidats + 7 doublons volontaires = 507 lignes brutes, écrit
+     `samples/candidats-session-juillet-2026.csv` (BOM UTF-8, séparateur virgule) ;
+  2. les fait passer par un **vrai** pipeline (`createPipeline`/`addStep`/`replay`, pas un calcul
+     ad hoc) : une étape `deduplicate` (clé nom+prénom+date de naissance, mode normalisé, action
+     "garder le plus complet") ramène 507 → 500 lignes ;
+  3. définit un `ReportSpec` de démonstration à 7 blocs (texte d'intro, ligne de KPI, graphique en
+     barres "Répartition des décisions", histogramme "Distribution des notes" à bornes explicites,
+     anneau "part de candidats ≥ 10 présences", tableau filtré "recalés à recontacter", saut de
+     page, tableau filtré "notes manquantes") — validé par `validateReportSpec` avant écriture ;
+  4. écrit `samples/report-spec.json` ;
+  5. calcule le rapport (`computeReport`, remappage identité puisque le CSV source utilise déjà
+     les noms de colonnes attendus) et construit la traçabilité à partir du **pipeline réellement
+     rejoué** à l'étape 2 (pas de données de traçabilité fabriquées séparément) ;
+  6. exporte `samples/rapport-brouillon.pdf` (mode brouillon, filigrane + traçabilité complète) et
+     `samples/rapport-officiel.pdf` (mode officiel, en-tête "Auto-École Monaco — Centre de
+     formation", traçabilité condensée).
+- Les 4 fichiers existent et ont été vérifiés structurellement, pas seulement "le script n'a pas
+  levé d'exception" :
+  - CSV : `file` le reconnaît comme "CSV Unicode text, UTF-8 (with BOM)", 507 lignes de données
+    + en-tête, accents visibles dans les premières lignes.
+  - `report-spec.json` : JSON valide, contenu conforme au spec défini dans le script.
+  - Les deux PDF : `file` les reconnaît comme documents PDF 1.3 valides (5 et 6 pages — le
+    brouillon a une page de moins car son bloc de traçabilité est plus dense mais la pagination
+    diffère légèrement selon le contenu réel, pas un nombre de pages câblé en dur), en-tête
+    `%PDF-`/pied `%%EOF` présents, `FontFile2` présent dans le flux d'objets (police réellement
+    embarquée dans chaque fichier, pas seulement référencée).
+- Bug de configuration résolu avant de pouvoir typechecker/tester correctement ces nouveaux
+  fichiers : `tsconfig.app.json` (`include: ["src"]`) ne couvrait jamais `scripts/`, donc
+  `tsc --noEmit -p tsconfig.app.json` rapportait "aucune erreur" de façon trompeuse (les fichiers
+  n'étaient simplement jamais dans le programme vérifié). Créé `tsconfig.scripts.json` dédié
+  (Node, `types: ["node"]`). Un premier essai avec `include: ["scripts", "src"]` faisait
+  apparaître une fausse erreur sur `main.tsx` (import CSS sans les types `vite/client`, absents de
+  cette config orientée Node) — corrigé en restreignant `include` à `["scripts"]` seul (TS
+  vérifie quand même, de façon transitive, les fichiers `src/engine/...`/`src/pdf/...` réellement
+  importés). `vitest.config.ts` étendu (`scripts/**/*.test.ts`) pour que les tests du générateur
+  soient exécutés par `bun run test`.
+- Bug réel corrigé : `CandidateRow` n'avait pas de signature d'index, ce qui cassait
+  l'assignabilité à `Record<string, string>` à deux sites d'appel (construction de `Table`, mise
+  en forme des lignes pour `Papa.unparse`). Corrigé en ajoutant `[key: string]: string;` à
+  l'interface plutôt qu'en ajoutant un cast à chaque site d'appel.
+- `bun run test` (172 tests, tous verts), `npx tsc --noEmit -p tsconfig.scripts.json` propre,
+  `bun run build` vert (`tsc -b && vite build`, seul avertissement : taille de bundle > 500 kB,
+  déjà attendu et noté pour la phase 7 — imports dynamiques), `oxlint` sans nouvel avertissement
+  (seuls les avertissements préexistants, aucun sur les fichiers de cette phase).
+- Commits en unités cohérentes : config (vitest+tsconfig), générateur de données+test,
+  script d'orchestration, fichiers `samples/` générés, documentation.
+- README.md et CLAUDE.md mis à jour (nouvelle section « Livrables de démonstration »).
+
+Pas fait / à vérifier :
+- Pas d'ouverture visuelle humaine des deux PDF (pas d'outil de rendu/capture d'écran PDF
+  disponible cette nuit) — seule une vérification structurelle (en-têtes PDF, présence de
+  `FontFile2`, nombre de pages, taille de fichier) a été faite. **C'est le point le plus important
+  à vérifier à ton réveil** : ouvre les deux fichiers dans `samples/` et juge si la mise en page,
+  les graphiques et le texte sont satisfaisants avant de considérer les phases 1-3 comme
+  définitivement validées visuellement.
+- Le générateur de données (`generateSyntheticDataset.ts`) n'a pas de test qui vérifie que les
+  doublons quasi-exacts sont bien détectés par le pipeline de dédoublonnage réel avec les
+  paramètres utilisés dans `generateSamples.ts` — j'ai vérifié le résultat numérique une fois
+  (507 → 500, soit -7, cohérent avec les 4 doublons exacts + 3 quasi-exacts injectés) mais ce
+  n'est pas un test automatisé qui empêcherait une régression silencieuse si le générateur ou les
+  paramètres de dédoublonnage changent plus tard.
+
+Décisions prises faute de pouvoir demander :
+- **Nombre de candidats et graine fixe (500, seed 42)** : le prompt demandait un jeu de données
+  "réaliste" de plusieurs centaines de lignes sans nombre précis. J'ai choisi 500 (rond, assez
+  grand pour que les graphiques/tableaux du rapport aient un contenu substantiel, assez petit pour
+  que les PDF restent rapides à générer et à relire). Graine fixe (42) pour que le jeu de données
+  soit strictement reproductible d'une régénération à l'autre — un `git diff` sur `samples/` après
+  une future modification du moteur ne montrera que l'effet de cette modification, jamais un bruit
+  aléatoire du générateur. Question que je t'aurais posée : cette taille te convient-elle, ou
+  préfères-tu un jeu plus proche de la taille réelle d'une session (ex. 30-80 candidats, taille
+  plus représentative d'une vraie session de formation plutôt qu'un volume "de test") ?
+- **Étape de dédoublonnage choisie pour le pipeline de démonstration** : le prompt ne précise pas
+  quel pipeline appliquer avant le calcul du rapport, seulement qu'il doit y avoir "un petit
+  pipeline réaliste". J'ai choisi un dédoublonnage simple (nom+prénom+date de naissance, mode
+  normalisé, garder le plus complet) parce que c'est l'opération la plus naturelle avant un
+  rapport de session (éviter de compter un candidat en double dans les KPI) et parce que les
+  doublons volontaires du générateur donnent un résultat visible et vérifiable (507 → 500).
+  Question que je t'aurais posée : un pipeline plus riche (ex. normalisation de colonnes avant
+  dédoublonnage, ou un `enrich_join`/`append_rows` avec un second fichier fictif) illustrerait-il
+  mieux les capacités de l'outil, ou la simplicité actuelle te convient-elle pour un premier jet ?
+- **Contenu du `ReportSpec` de démonstration** : composition choisie pour couvrir un maximum de
+  types de blocs en un seul document réaliste (texte, KPI, 3 types de graphiques différents dont
+  un histogramme à bornes explicites, 2 tableaux filtrés avec un saut de page entre eux) plutôt
+  qu'un rapport minimal. Le contenu métier (candidats recalés à recontacter, notes manquantes à
+  traiter en priorité) est inventé mais plausible pour un centre de formation. Question que je
+  t'aurais posée : ce contenu correspond-il à un vrai besoin de rapport chez toi, ou préfères-tu
+  que je le remplace par un exemple plus proche d'un rapport que tu produis réellement ?
+
+Doutes pour Bonito :
+- **Priorité n°1 au réveil** : ouvre `samples/rapport-brouillon.pdf` et
+  `samples/rapport-officiel.pdf`. Tout ce qui a été construit dans les phases 1 à 3 (agrégation,
+  ReportSpec, rendu PDF) n'a jamais été vu par un œil humain avant cette nuit — ces deux fichiers
+  sont le seul moyen de juger si le résultat final est satisfaisant avant d'aller plus loin
+  (éditeur de rapport, bouton d'export dans l'UI).
+- Si la taille du jeu de données (500) ou le contenu du `ReportSpec` de démonstration ne te
+  conviennent pas, `scripts/generateSamples.ts` est le seul fichier à modifier puis relancer
+  (`bun run scripts/generateSamples.ts`) — aucun autre fichier ne dépend des valeurs qu'il choisit.
+
+---
+
