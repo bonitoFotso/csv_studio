@@ -1,4 +1,4 @@
-import type { OperationReport, Pipeline, Table } from '@/engine/types.ts';
+import type { OperationReport, Pipeline, Table } from './engine/types.ts';
 
 const TYPE_LABEL: Record<string, string> = {
   rename_columns: 'Renommer des colonnes',

@@ -1,5 +1,5 @@
 import Papa from 'papaparse';
-import type { Column, Table } from '@/engine/types.ts';
+import type { Column, Table } from './engine/types.ts';
 
 export interface ParsedCsv {
   columnNames: string[];
@@ -57,11 +57,6 @@ export function parseCsvText(text: string, options: ParseCsvOptions = {}): Parse
     rawRowCount: rawRows.length,
     preview: rawRows.slice(0, 5),
   };
-}
-
-export async function parseCsvFile(file: File, options?: ParseCsvOptions): Promise<ParsedCsv> {
-  const text = await file.text();
-  return parseCsvText(text, options);
 }
 
 export interface ExportCsvOptions {
