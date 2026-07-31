@@ -349,3 +349,111 @@ Doutes pour Bonito :
 
 ---
 
+## Phase 5 — Monorepo (packages/core, apps/web, apps/mcp)
+Branche : night/5-monorepo (part de night/4-samples)
+Statut : terminée
+Commits : 439a288, e4448fa, 37330f0, 6062f9d, daeee29
+Fait :
+- Workspaces Bun mis en place : `packages/core` (`@csv-studio/core`, moteur pur — aucune
+  dépendance React/DOM/navigateur), `apps/web` (`@csv-studio/web`, l'app actuelle), `apps/mcp`
+  (`@csv-studio/mcp`, squelette seulement — implémentation reportée à la phase 6).
+- Le moteur (`src/engine/`, 55 fichiers) a migré **tel quel** vers `packages/core/src/engine/`
+  via `git mv` — **aucun fichier de test moteur n'a été modifié**, seul son emplacement a changé ;
+  ses imports internes étaient déjà tous relatifs (`./types.ts`, `../engine/...`), donc rien à
+  réécrire à l'intérieur du moteur lui-même. `src/lib/csv.ts` et `src/lib/report.ts` (purs, sans
+  DOM) ont rejoint le core ; `parseCsvFile` (dépend de l'objet `File` du navigateur) en a été
+  extrait et vit maintenant dans `apps/web/src/lib/csv.ts`, en fine enveloppe autour du
+  `parseCsvText` du core.
+- Tous les fichiers restants (`components/`, `hooks/`, `state/`, `persistence/`, `worker/`,
+  `pdf/`, `App.tsx`, `main.tsx`, `scripts/generateSamples.ts`) ont migré vers `apps/web/`. Leurs
+  imports vers le moteur (36 fichiers, alias local `@/engine/...` ou chemins relatifs
+  `../engine/...` depuis `pdf/`) ont été réécrits vers `@csv-studio/core/engine/...` — résolu via
+  le symlink de workspace posé par `bun install` (`node_modules/@csv-studio/core` →
+  `packages/core`) et la carte `"exports": { "./*": "./src/*" }` du `package.json` du core, qui
+  autorise les imports profonds avec extension explicite déjà utilisés partout ailleurs dans le
+  projet (`moduleResolution: bundler`).
+- `packages/core/src/index.ts` : barrel `export *` pour un futur import simple
+  (`import { ... } from '@csv-studio/core'`), en plus des imports profonds existants — vérifié
+  sans collision de nom entre les ~18 modules ré-exportés.
+- 172 tests (nombre inchangé depuis la phase 4) toujours verts, **sans qu'aucun test n'ait dû être
+  modifié** — seuls des fichiers non-test (composants, config) ont changé d'imports. Un seul
+  `vitest.config.ts` racine couvre maintenant les trois workspaces
+  (`packages/*/src`, `apps/*/src`, `apps/*/scripts`).
+- `bun run --cwd packages/core typecheck`, `npx tsc -b` dans `apps/web`, et `npx tsc --noEmit` sur
+  `apps/mcp` et sur `apps/web/tsconfig.scripts.json` : tous propres. `bun run build` (racine,
+  typecheck du core puis build d'`apps/web`) produit un bundle **strictement identique en taille**
+  à celui de la phase 4 (591.77 kB, mêmes noms de chunk sauf hash de contenu) — confirme que le
+  déplacement n'a changé aucun comportement ni aucune arborescence de dépendances. `oxlint` sans
+  nouvel avertissement.
+- Vérification à l'exécution, pas seulement au typecheck : serveur de dev Vite démarré
+  (`apps/web`), `curl` sur `/` (200, HTML servi) et sur `/src/main.tsx` (200, le module transformé
+  contient bien `/@fs/.../packages/core/src/engine/operations/index.ts` — preuve que la résolution
+  `@csv-studio/core` fonctionne réellement au runtime de Vite, pas seulement dans `tsc`).
+- `bun run samples` relancé depuis son nouvel emplacement (`apps/web/scripts/generateSamples.ts`,
+  chemin d'écriture vers `samples/` ajusté pour sa nouvelle profondeur) : les 4 fichiers se
+  régénèrent, CSV et JSON strictement identiques octet pour octet (jeu de données à graine fixe),
+  mêmes nombres de pages PDF — preuve que la chaîne complète (moteur + agrégation + ReportSpec +
+  PDF) fonctionne toujours de bout en bout après la réorganisation.
+- README.md et CLAUDE.md mis à jour (nouvelle section « Monorepo », diagramme de structure
+  reconstruit, tous les chemins de fichiers cités corrigés).
+
+Pas fait / à vérifier :
+- **Le premier commit de cette phase (439a288), pris isolément, ne compile pas.** `git mv`
+  indexe automatiquement le contenu du fichier *au moment du déplacement* ; les corrections
+  d'import que j'ai faites juste après avec des éditions de fichier n'ont donc pas été incluses
+  dans ce premier commit (elles étaient dans l'arbre de travail mais pas encore dans l'index), et
+  se sont retrouvées dans le commit suivant (e4448fa) à la place. Je n'ai pas corrigé ça avec un
+  `git commit --amend` ou un rebase, parce que la consigne de la nuit interdit explicitement de
+  réécrire l'historique — et je n'ai remarqué le problème qu'après coup, une fois les cinq commits
+  de la phase déjà posés. **L'état du dépôt après le dernier commit de la phase (daeee29) est
+  vérifié vert** (tests, typecheck, build, lint, exécution réelle du serveur de dev et du script
+  d'échantillons, tous refaits sur l'arbre de travail propre après le dernier commit) — mais si tu
+  fais un `git bisect` ou que tu inspectes les commits un par un sur cette branche, ne t'étonne pas
+  que 439a288 seul soit cassé : c'est un artefact de l'ordre `git mv` → édition → `git add`, pas
+  une régression fonctionnelle réelle.
+- `packages/core/tsconfig.json` n'a pas de `"composite": true` ni les configs correspondantes sur
+  les autres workspaces — le `tsconfig.json` racine (fichier solution avec `references`) n'est
+  donc pas invocable directement via `tsc -b` à la racine (il échouerait sur l'absence de
+  `composite`). Aucun script ne l'invoque de cette façon (chaque `build`/`typecheck` cible son
+  propre workspace explicitement), donc ce n'est pas bloquant, mais un `tsc -b .` lancé à la main
+  à la racine échouerait. Facile à corriger si tu veux ce mode de fonctionnement (ajouter
+  `composite: true` partout) — pas fait faute de cas d'usage réel cette nuit.
+- Le contenu de `apps/mcp` est un squelette pur (un seul fichier `src/index.ts` avec un
+  commentaire et un `export {}`) — aucune des six commandes MCP n'est implémentée, c'est la phase
+  6 qui s'en charge.
+
+Décisions prises faute de pouvoir demander :
+- **Où va l'export PDF (`src/pdf/`) : dans `apps/web`, pas dans un package séparé.** Le prompt ne
+  précise pas où placer le rendu PDF dans le découpage en workspaces, seulement ce que `core` doit
+  contenir (qui ne mentionne pas le PDF). J'ai choisi `apps/web/src/pdf/` parce qu'aucun autre
+  consommateur n'en a besoin cette nuit : le contrat MCP décrit dans le prompt
+  (`build_report` renvoie des agrégats calculés, jamais un fichier) ne génère pas de PDF. Si un
+  besoin de génération PDF côté MCP apparaît plus tard, ce sera le signal qu'il faut extraire
+  `pdf/` dans son propre package partagé — pas fait par anticipation, pour éviter d'introduire une
+  frontière de package sans consommateur réel des deux côtés.
+- **`apps/web/scripts/` plutôt qu'un dossier `scripts/` à la racine.** Le script de génération des
+  livrables dépend directement de `apps/web/src/pdf/` (pour produire les PDF) ; le laisser à la
+  racine aurait nécessité soit un import cross-workspace inhabituel (`../apps/web/src/pdf/...`
+  depuis la racine, en dehors de toute frontière de package), soit dupliquer le rendu PDF. Je l'ai
+  déplacé avec le code dont il dépend le plus, et j'ai ajouté un raccourci `bun run samples` à la
+  racine pour que la commande reste simple à taper malgré le déplacement.
+- **Pas de `"composite": true` sur les tsconfig des workspaces.** Une configuration monorepo
+  TypeScript "canonique" activerait `composite`/`tsc -b` de bout en bout pour permettre
+  l'incrémental cross-package. Je ne l'ai pas fait parce qu'aucun script ne l'exige (chaque
+  workspace se typecheck indépendamment avec `tsc --noEmit -p <son propre tsconfig>` ou
+  `tsc -b <son propre tsconfig>`, jamais depuis la racine) et que le brancher correctement
+  aurait demandé de toucher tous les tsconfig pour un bénéfice non mesuré cette nuit (temps de
+  build). Noté ci-dessus comme not-fait-à-vérifier plutôt qu'ignoré silencieusement.
+
+Doutes pour Bonito :
+- Le point le plus important : **regarde le commit 439a288 pris isolément si jamais tu explores
+  l'historique** — il ne compile pas seul, c'est documenté ci-dessus, ce n'est pas un piège que tu
+  as raté en relisant, c'est un vrai artefact de la façon dont `git mv` indexe le contenu. La
+  branche dans son état final (dernier commit) est vérifiée verte.
+- Si tu préfères une structure `packages/pdf` séparée plutôt que `apps/web/src/pdf`, ou un dossier
+  `scripts/` unique à la racine plutôt que `apps/web/scripts/`, dis-le : ce sont des choix faits
+  sans pouvoir te consulter, faciles à revenir en arrière puisque rien d'autre n'en dépend encore
+  (la phase 6, MCP, n'a pas commencé).
+
+---
+
