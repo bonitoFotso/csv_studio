@@ -90,6 +90,25 @@ tout le projet, partagée avec l'opération `summarize` du pipeline et l'export 
   depuis l'UI (l'éditeur de rapport n'existe pas encore) — utilisé pour l'instant par les tests et
   par le script qui génère `samples/*.pdf`.
 
+## Livrables de démonstration (`scripts/`, `samples/`)
+
+- `scripts/generateSyntheticDataset.ts` : `generateSyntheticCandidates(count, seed)` — jeu de
+  données reproductible (mulberry32) à graine fixe, avec accents, valeurs manquantes, virgule
+  décimale française, et doublons volontaires exacts/quasi-exacts. `CandidateRow` a une signature
+  d'index (`[key: string]: string`) en plus de ses champs nommés, pour rester assignable partout où
+  le code générique attend un `Record<string, string>` (écriture CSV, construction de `Table`) sans
+  cast à chaque site d'appel.
+- `scripts/generateSamples.ts` : orchestration bout en bout — génère le jeu de données, l'écrit en
+  CSV, le fait passer par un vrai pipeline (`replay`), calcule un `ReportSpec` de démonstration
+  dessus, et écrit les 4 fichiers dans `samples/`. Exécuter avec `bun run scripts/generateSamples.ts`
+  après toute modification du moteur d'agrégation/rapport/PDF pour vérifier que les livrables
+  restent cohérents.
+- `tsconfig.scripts.json` : config Node dédiée (`types: ["node"]`, `include: ["scripts"]` seulement)
+  pour typechecker `scripts/` — `tsconfig.app.json` ne le couvre pas (`include: ["src"]`), et lui
+  ajouter `src` en entier ferait remonter de fausses erreurs sur des fichiers navigateur (`main.tsx`
+  et son import CSS) qui ont besoin des types `vite/client` que cette config n'a pas.
+- `vitest.config.ts` inclut `scripts/**/*.test.ts` en plus de `src/**/*.test.ts`.
+
 ## Structure
 
 ```
