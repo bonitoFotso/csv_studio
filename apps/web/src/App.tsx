@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Copy, Download, Filter, FolderOpen, Link2, ListPlus, Save, Sigma } from 'lucide-react';
+import { Copy, Download, FileText, Filter, FolderOpen, Link2, ListPlus, Save, Sigma } from 'lucide-react';
 import { addStep, createOperation } from '@csv-studio/core/engine/pipeline.ts';
 import type { ReorderColumnsParams } from '@csv-studio/core/engine/operations/reorderColumns.ts';
 import { mergeVisibleReorder } from '@/lib/columnOrder.ts';
@@ -19,6 +19,7 @@ import { SaveRecipeDialog } from '@/components/recipes/SaveRecipeDialog.tsx';
 import { LoadRecipeDialog } from '@/components/recipes/LoadRecipeDialog.tsx';
 import { AppendRowsDialog } from '@/components/append/AppendRowsDialog.tsx';
 import { SummarizeDialog } from '@/components/summarize/SummarizeDialog.tsx';
+import { ReportExportDialog } from '@/components/report/ReportExportDialog.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { BusyIndicator } from '@/components/ui/busy-indicator.tsx';
 import { useDelayedFlag } from '@/hooks/useDelayedFlag.ts';
@@ -33,6 +34,7 @@ function Workspace() {
   const [joinOpen, setJoinOpen] = React.useState(false);
   const [appendOpen, setAppendOpen] = React.useState(false);
   const [summarizeOpen, setSummarizeOpen] = React.useState(false);
+  const [reportExportOpen, setReportExportOpen] = React.useState(false);
   const [saveRecipeOpen, setSaveRecipeOpen] = React.useState(false);
   const [loadRecipeOpen, setLoadRecipeOpen] = React.useState(false);
   const [selectedColumnIds, setSelectedColumnIds] = React.useState<Set<string>>(new Set());
@@ -87,6 +89,10 @@ function Workspace() {
                 <Button size="sm" variant="outline" onClick={() => setExportOpen(true)}>
                   <Download size={14} />
                   Exporter
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setReportExportOpen(true)}>
+                  <FileText size={14} />
+                  Rapport PDF
                 </Button>
                 <div className="mx-1 h-6 w-px bg-border" />
                 <Button size="sm" variant="ghost" onClick={() => setLoadRecipeOpen(true)}>
@@ -193,6 +199,13 @@ function Workspace() {
             />
             <SaveRecipeDialog entry={active.entry} open={saveRecipeOpen} onOpenChange={setSaveRecipeOpen} />
             <LoadRecipeDialog entry={active.entry} open={loadRecipeOpen} onOpenChange={setLoadRecipeOpen} />
+            <ReportExportDialog
+              entry={active.entry}
+              displayTable={active.displayTable}
+              reportsByIndex={active.reportsByIndex}
+              open={reportExportOpen}
+              onOpenChange={setReportExportOpen}
+            />
           </>
         )
       )}

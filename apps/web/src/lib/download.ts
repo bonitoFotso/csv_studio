@@ -1,7 +1,6 @@
 const BYTE_ORDER_MARK = '﻿';
 
-export function downloadTextFile(filename: string, content: string, mimeType: string, bom = false): void {
-  const blob = new Blob([bom ? BYTE_ORDER_MARK : '', content], { type: mimeType });
+export function downloadBlob(filename: string, blob: Blob): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -10,4 +9,8 @@ export function downloadTextFile(filename: string, content: string, mimeType: st
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+export function downloadTextFile(filename: string, content: string, mimeType: string, bom = false): void {
+  downloadBlob(filename, new Blob([bom ? BYTE_ORDER_MARK : '', content], { type: mimeType }));
 }
