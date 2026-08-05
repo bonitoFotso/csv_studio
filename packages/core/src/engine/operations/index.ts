@@ -14,6 +14,7 @@ import { hideColumnsDefinition } from './hideColumns.ts';
 import { normalizeColumnsDefinition } from './normalizeColumns.ts';
 import { renameColumnsDefinition } from './renameColumns.ts';
 import { reorderColumnsDefinition } from './reorderColumns.ts';
+import { setValueWhereDefinition } from './setValueWhere.ts';
 import { summarizeDefinition } from './summarize.ts';
 
 let registered = false;
@@ -34,6 +35,7 @@ export function registerAllOperations(): void {
   registerOperation(addExpressionColumnDefinition);
   registerOperation(normalizeColumnsDefinition);
   registerOperation(filterRowsDefinition);
+  registerOperation(setValueWhereDefinition);
   registerOperation(deduplicateDefinition);
   registerOperation(enrichJoinDefinition);
   registerOperation(appendRowsDefinition);

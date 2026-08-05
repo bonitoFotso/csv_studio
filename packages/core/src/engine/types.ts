@@ -39,6 +39,7 @@ export type OperationType =
   | 'add_expression_column'
   | 'normalize_columns'
   | 'filter_rows'
+  | 'set_value_where'
   | 'deduplicate'
   | 'enrich_join'
   | 'append_rows'
